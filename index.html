@@ -339,11 +339,27 @@
 
         @media (max-width: 768px) {
             .widget-pill { display: none; }
+            
+            /* Fixed Mobile Bottom Sheet */
             .info-panel {
-                top: auto; bottom: 0; left: 0; right: 0; width: 100vw;
-                border-radius: 20px 20px 0 0; transform: translateY(calc(100% - 70px));
+                top: auto !important; 
+                bottom: 0 !important; 
+                left: 0 !important; 
+                right: 0 !important; 
+                width: 100vw !important;
+                max-height: 75vh !important;
+                overflow-y: auto !important;
+                border-radius: 20px 20px 0 0 !important;
+                transform: translateY(calc(100% - 65px));
+                transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
             }
-            .info-panel.expanded { transform: translateY(0); }
+            
+            /* Opens full panel when active */
+            .info-panel.expanded,
+            .info-panel:not(.collapsed) {
+                transform: translateY(0) !important;
+            }
+
             .legend-bar, .phone-pill { display: none; }
             .right-toolbar { top: 60px; right: 10px; }
             .lightbox-container { max-width: 90vw; max-height: 80vh; }
@@ -703,7 +719,9 @@
         function toggleInfoPanelCollapse() {
             const panel = document.getElementById('infoPanel');
             const btn = document.getElementById('collapseBtn');
+            
             panel.classList.toggle('collapsed');
+            panel.classList.toggle('expanded');
             btn.innerText = panel.classList.contains('collapsed') ? '+' : '−';
         }
 
@@ -969,6 +987,13 @@
         function focusSelectedPlot(num) {
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
             selectedPlotNum = query;
+            
+            const infoPanel = document.getElementById('infoPanel');
+            if (infoPanel) {
+                infoPanel.classList.remove('collapsed');
+                infoPanel.classList.add('expanded');
+            }
+            
             const targetMesh = plotMeshes[query];
 
             if (targetMesh) {
