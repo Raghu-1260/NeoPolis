@@ -809,8 +809,8 @@
                     { id: 'carto-hybrid-labels', type: 'raster', source: 'carto-labels', layout: { 'visibility': 'visible' } }
                 ]
             },
-            // NEW: Initial Zoom out setting
-            center: siteOrigin, zoom: 17.8, pitch: 45, bearing: 70.99999999999989, antialias: true
+            // EXACT EXTRACTED CAMERA COORDINATES
+            center: [80.7538896607399, 16.470833069059623], zoom: 18.102824376136326, pitch: 60, bearing: 74.19999999999958, antialias: true
         });
 
         let modelTransform = getTransformMatrix(siteOrigin);
@@ -1527,8 +1527,14 @@
             updatePlotColorsFromDB();
             map.setPaintProperty('esri-satellite-layer', 'raster-opacity', 1.0);
             
-            // ZOOM OUT RESET
-            map.flyTo({ center: siteOrigin, zoom: 17.8, pitch: 45, bearing: 70.99999999999989, duration: 1200 });
+            // EXACT EXTRACTED RESET FLY-TO
+            map.flyTo({ 
+                center: [80.7538896607399, 16.470833069059623], 
+                zoom: 18.102824376136326, 
+                pitch: 60, 
+                bearing: 74.19999999999958, 
+                duration: 1200 
+            });
         }
 
         function updateDimensionCallouts() {
