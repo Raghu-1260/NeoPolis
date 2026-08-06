@@ -184,15 +184,19 @@
             padding: 8px 16px; border-radius: 30px; font-size: 0.78rem; font-weight: 700; color: #fff;
         }
 
-        /* Dynamic Collapsible Right Toolbar */
+        /* Dynamic Collapsible Right Toolbar - Now Draggable! */
         .right-toolbar {
             position: absolute; top: 110px; right: 15px; z-index: 10;
             display: flex; flex-direction: column; gap: 12px;
             padding: 12px 8px; border-radius: 16px;
             transition: max-height 0.3s ease, padding 0.3s ease;
             overflow: hidden; max-height: 350px;
+            cursor: grab; /* Shows a grab hand on desktop */
+            touch-action: none; /* Crucial for smooth mobile dragging */
         }
+        .right-toolbar:active { cursor: grabbing; }
         .right-toolbar.collapsed { max-height: 42px; padding: 6px; }
+        
         .right-toolbar-toggle {
             background: transparent; border: none; color: #d4af37; font-size: 0.9rem;
             font-weight: 800; cursor: pointer; text-align: center; margin-bottom: 2px;
@@ -549,7 +553,7 @@
 
     <div class="phone-pill glass-card">📞 +91 9505 894 894</div>
 
-    <!-- Dynamic Collapsible Right Toolbar -->
+    <!-- Dynamic Collapsible Right Toolbar (Draggable) -->
     <div class="right-toolbar glass-card" id="rightToolbar">
         <button class="right-toolbar-toggle" onclick="toggleRightToolbar()" id="rightToolbarToggleBtn">−</button>
         <button class="tool-icon-btn active" onclick="focusSelectedPlot()">
@@ -681,6 +685,7 @@
             "89": { dim: "30.0' x 55.0'", area: "183", facing: "East", status: "SOLD", owner: "Rams", reserved_by_id: "sales" }
         };
 
+        // NEW: Ensure all default plots are initialized with standard size 30' x 55'
         for (let i = 1; i <= 121; i++) {
             const key = String(i);
             if (!plotDatabase[key]) {
@@ -1215,6 +1220,9 @@
                 
                 updatePlotColorsFromDB();
                 updatePlotUI(plotId);
+                
+                // NEW: Automatically close panel and return to home view after 0.5 seconds
+                setTimeout(() => { resetToOverview(); }, 500); 
             };
 
             try {
@@ -1237,6 +1245,7 @@
                     updatePlotColorsFromDB();
                     updatePlotUI(plotId);
                     alert(result.message);
+                    resetToOverview(); // NEW: Return to home
                 } else {
                     alert(`Server Security Error: ${result.message}`);
                 }
@@ -1621,7 +1630,10 @@
             document.getElementById('imageLightbox').style.display = 'none';
         }
 
-        function closeModal(id) { document.getElementById('imageLightbox').style.display = 'none'; }
+        function closeModal(id) { 
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none'; 
+        }
 
         window.addEventListener('keydown', (e) => {
             const lightbox = document.getElementById('imageLightbox');
@@ -1633,6 +1645,57 @@
         });
 
         function handleSearch(e) { if (e.key === 'Enter') focusSelectedPlot(); }
+
+        // ==========================================
+        // DRAGGABLE FLOATING TOOLBAR LOGIC
+        // ==========================================
+        const dragToolbar = document.getElementById('rightToolbar');
+        let isDraggingToolbar = false;
+        let tStartX, tStartY, tStartTop, tStartLeft;
+
+        dragToolbar.addEventListener('pointerdown', function(e) {
+            // Do not trigger drag if the user is clicking a specific tool icon
+            if(e.target.closest('button') && e.target.id !== 'rightToolbarToggleBtn') return;
+
+            isDraggingToolbar = true;
+            tStartX = e.clientX;
+            tStartY = e.clientY;
+            
+            const rect = dragToolbar.getBoundingClientRect();
+            tStartTop = rect.top;
+            tStartLeft = rect.left;
+            
+            // Turn off CSS transitions temporarily so the drag is instantly smooth
+            dragToolbar.style.transition = 'none'; 
+            
+            // Switch from "right" positioning to "left/top" absolute coordinates
+            dragToolbar.style.right = 'auto'; 
+            dragToolbar.style.left = tStartLeft + 'px';
+            dragToolbar.style.top = tStartTop + 'px';
+            
+            // Capture the pointer so it doesn't lose track if you drag fast
+            dragToolbar.setPointerCapture(e.pointerId);
+        });
+
+        dragToolbar.addEventListener('pointermove', function(e) {
+            if (!isDraggingToolbar) return;
+            e.preventDefault(); // Prevents the screen from scrolling while dragging
+            
+            const dx = e.clientX - tStartX;
+            const dy = e.clientY - tStartY;
+            
+            dragToolbar.style.left = (tStartLeft + dx) + 'px';
+            dragToolbar.style.top = (tStartTop + dy) + 'px';
+        });
+
+        dragToolbar.addEventListener('pointerup', function(e) {
+            if (!isDraggingToolbar) return;
+            isDraggingToolbar = false;
+            
+            // Turn the smooth expand/collapse transitions back on
+            dragToolbar.style.transition = 'max-height 0.3s ease, padding 0.3s ease';
+            dragToolbar.releasePointerCapture(e.pointerId);
+        });
     </script>
 </body>
 </html>
