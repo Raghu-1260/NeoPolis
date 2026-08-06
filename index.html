@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Avenue Interactive | NeoPolis Springs Master Plan</title>
+
+    <!-- MapLibre GL CSS & JS -->
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+
+    <!-- Three.js Libraries & GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background-color: #080a0f; color: #ffffff; touch-action: none; }
+        #map { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; }
+
+        /* SVG Overlay for Dimension Extensions */
+        #dimensionSvg {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 6; display: none;
+        }
+
+        /* Glassmorphism Styling */
+        .glass-card {
+            background: rgba(13, 18, 28, 0.75) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .header-bar {
+            position: absolute; top: 12px; left: 15px; right: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 10; pointer-events: none;
+        }
+
+        .left-branding {
+            display: flex; align-items: center; gap: 12px;
+            padding: 8px 18px; border-radius: 14px; pointer-events: auto;
+        }
+
+        .avenue-logo { height: 26px; width: auto; object-fit: contain; }
+        .project-title { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.5px; color: #ffffff; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 12px; }
+        .project-title .brand-sub { color: #d4af37; font-weight: 600; font-size: 0.75rem; letter-spacing: 2px; margin-left: 4px; }
+
+        .widget-pill {
+            display: flex; align-items: center; gap: 15px;
+            padding: 8px 18px; border-radius: 30px; font-size: 0.72rem; color: #a0aec0; pointer-events: auto;
+        }
+        .widget-item strong { color: #ffffff; font-weight: 600; }
+
+        .btn-role-badge {
+            background: rgba(212, 175, 55, 0.15); border: 1px solid #d4af37; color: #d4af37;
+            padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+        }
+
+        /* Top Right Auth Dropdown Widget */
+        .auth-container { position: relative; pointer-events: auto; }
+        .auth-btn {
+            background: rgba(212, 175, 55, 0.2); border: 1px solid #d4af37; color: #d4af37;
+            padding: 8px 16px; border-radius: 30px; font-size: 0.75rem; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+        }
+        .auth-btn:hover { background: #d4af37; color: #000; }
+
+        .auth-dropdown {
+            position: absolute; top: 45px; right: 0; width: 280px;
+            border-radius: 16px; padding: 16px; z-index: 20; display: none;
+            flex-direction: column; gap: 10px;
+        }
+        .auth-dropdown.active { display: flex; }
+        .auth-dropdown h4 { font-size: 0.85rem; color: #d4af37; font-weight: 800; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; }
+        .auth-field { display: flex; flex-direction: column; gap: 4px; position: relative; }
+        .auth-field label { font-size: 0.65rem; color: #a0aec0; font-weight: 700; text-transform: uppercase; }
+        
+        .auth-input-wrapper { position: relative; width: 100%; display: flex; align-items: center; }
+        .auth-input-wrapper input {
+            width: 100%; padding: 8px 32px 8px 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px; color: #fff; font-size: 0.78rem; outline: none;
+        }
+        .toggle-password-eye {
+            position: absolute; right: 8px; cursor: pointer; user-select: none;
+            font-size: 0.85rem; opacity: 0.7; transition: opacity 0.2s;
+        }
+        .toggle-password-eye:hover { opacity: 1; }
+
+        /* Dynamic Collapsible Info Panel */
+        .info-panel {
+            position: absolute; top: 70px; left: 15px; width: 320px;
+            border-radius: 20px; padding: 18px; z-index: 10;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden; max-height: 85vh;
+        }
+        .info-panel.collapsed {
+            max-height: 52px !important; padding-bottom: 0 !important;
+        }
+        .info-panel-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; cursor: pointer;
+        }
+        .collapse-toggle-btn {
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #d4af37; width: 24px; height: 24px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; cursor: pointer;
+        }
+
+        .panel-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.2px; color: #d4af37; font-weight: 700; }
+
+        .search-box { position: relative; margin-bottom: 12px; margin-top: 6px; }
+        .search-input {
+            width: 100%; padding: 10px 12px; background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 10px;
+            color: #ffffff; font-size: 0.85rem; outline: none; transition: border 0.2s;
+        }
+        .search-input:focus { border-color: #d4af37; }
+
+        .plot-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .plot-id { font-size: 2rem; font-weight: 800; color: #d4af37; }
+        
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; }
+        .status-badge.available { background: #22c55e; color: #ffffff; }
+        .status-badge.reserved { background: #ffea00; color: #000000; font-weight: 900; }
+        .status-badge.hold { background: #0066ff; color: #ffffff; }
+        .status-badge.sold { background: #ff0033; color: #ffffff; }
+
+        .meta-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+        .meta-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255, 255, 255, 0.03); padding: 8px 12px; border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.78rem;
+        }
+        .meta-lbl { color: #8c9ba5; }
+        .meta-val { font-weight: 700; color: #ffffff; }
+
+        .toggle-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(255, 255, 255, 0.05); padding: 8px 12px; border-radius: 8px;
+            margin-bottom: 8px; border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .toggle-row label { font-size: 0.68rem; font-weight: 700; color: #d4af37; }
+        .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #4a5568; transition: .3s; border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
+            background-color: white; transition: .3s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #48bb78; }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        .sales-edit-box {
+            display: none; background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px; padding: 12px; margin-bottom: 14px;
+        }
+        .sales-edit-box.active { display: block; }
+        .sales-field { margin-bottom: 8px; }
+        .sales-field label { display: block; font-size: 0.65rem; color: #d4af37; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+        .sales-field select, .sales-field input {
+            width: 100%; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px; color: #fff; font-size: 0.78rem; outline: none;
+        }
+
+        .btn-group { display: flex; flex-direction: column; gap: 8px; }
+        .btn-panel {
+            width: 100%; padding: 10px; border-radius: 10px; font-size: 0.78rem;
+            font-weight: 700; cursor: pointer; letter-spacing: 0.8px; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px; text-transform: uppercase;
+        }
+        .btn-gold { background: linear-gradient(135deg, #d4af37, #b8860b); border: none; color: #000; }
+        .btn-outline { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #fff; }
+
+        .phone-pill {
+            position: absolute; bottom: 15px; left: 15px; z-index: 10;
+            padding: 8px 16px; border-radius: 30px; font-size: 0.78rem; font-weight: 700; color: #fff;
+        }
+
+        /* Dynamic Collapsible Right Toolbar */
+        .right-toolbar {
+            position: absolute; top: 110px; right: 15px; z-index: 10;
+            display: flex; flex-direction: column; gap: 12px;
+            padding: 12px 8px; border-radius: 16px;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            overflow: hidden; max-height: 350px;
+        }
+        .right-toolbar.collapsed { max-height: 42px; padding: 6px; }
+        .right-toolbar-toggle {
+            background: transparent; border: none; color: #d4af37; font-size: 0.9rem;
+            font-weight: 800; cursor: pointer; text-align: center; margin-bottom: 2px;
+        }
+        .tool-icon-btn {
+            background: transparent; border: none; color: #a0aec0; font-size: 0.6rem;
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            cursor: pointer; font-weight: 700; transition: color 0.2s;
+        }
+        .tool-icon-btn:hover, .tool-icon-btn.active { color: #d4af37; }
+        .tool-icon-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+        .legend-bar {
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 12px; padding: 8px 18px; border-radius: 30px;
+            z-index: 10; font-size: 0.68rem; font-weight: 700;
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 3px 8px; border-radius: 12px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot.available { background: #22c55e; }
+        .dot.reserved { background: #ffea00; }
+        .dot.hold { background: #0066ff; }
+        .dot.sold { background: #ff0033; }
+
+        .dimension-label {
+            position: absolute; pointer-events: none; z-index: 7; display: none;
+            color: #ffffff; font-size: 0.85rem; font-weight: 800;
+            transform: translate(-50%, -50%); text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+        }
+
+        #heroPlotBadge {
+            position: absolute; pointer-events: none; z-index: 8; display: none;
+            background: rgba(13, 18, 28, 0.90); border: 1px solid #d4af37;
+            padding: 6px 14px; border-radius: 12px; text-align: center;
+            transform: translate(-50%, -100%); box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+        }
+        #heroPlotBadge .badge-title { font-size: 0.9rem; font-weight: 800; color: #d4af37; }
+        #heroPlotBadge .badge-sub { font-size: 0.7rem; color: #ffffff; font-weight: 600; }
+        #heroPlotBadge .badge-owner { font-size: 0.68rem; color: #ffc107; font-weight: 700; margin-top: 2px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 2px; display: none; }
+
+        .plot-number-tag {
+            position: absolute; pointer-events: none; z-index: 5;
+            font-size: 0.75rem; font-weight: 800; color: #ffffff;
+            background: rgba(0, 0, 0, 0.75); border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 2px 7px; border-radius: 8px; transform: translate(-50%, -50%);
+            transition: opacity 0.2s ease; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
+
+        /* PARK & GALLERY MODAL STYLING */
+        .park-modal {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85); z-index: 1000; display: none;
+            justify-content: center; align-items: center; backdrop-filter: blur(10px);
+        }
+        .park-modal-content {
+            position: relative; width: 90%; max-width: 900px; background: rgba(13, 18, 28, 0.95);
+            border: 1px solid #d4af37; border-radius: 20px; padding: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 15px;
+        }
+        .park-modal-header { display: flex; justify-content: space-between; align-items: center; }
+        .park-modal-header h3 { color: #d4af37; font-size: 1.2rem; font-weight: 800; }
+        .close-modal-btn { background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+        
+        .gallery-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 15px; max-height: 400px; overflow-y: auto; padding-right: 5px;
+        }
+        .gallery-card {
+            position: relative; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.4); display: flex; flex-direction: column; cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .gallery-card:hover { transform: translateY(-3px); border-color: #d4af37; }
+        .gallery-card img { width: 100%; height: 160px; object-fit: cover; }
+        .gallery-card-title { padding: 8px 12px; font-size: 0.8rem; font-weight: 700; color: #d4af37; text-align: center; }
+
+        /* UPLOAD & PROGRESS BAR STYLING */
+        .upload-section {
+            display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.05);
+            padding: 12px 14px; border-radius: 12px; border: 1px dashed rgba(212, 175, 55, 0.4);
+        }
+        .upload-row { display: flex; gap: 10px; align-items: center; }
+        
+        .progress-bar-container {
+            display: none; width: 100%; background: rgba(0,0,0,0.5); height: 10px;
+            border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .progress-bar-fill {
+            width: 0%; height: 100%; background: linear-gradient(90deg, #d4af37, #22c55e);
+            transition: width 0.1s ease;
+        }
+        .progress-status-text {
+            font-size: 0.72rem; font-weight: 700; color: #22c55e; display: flex; justify-content: space-between;
+        }
+
+        /* 80% SCALE LIGHTBOX WITH NEXT/PREV ARROWS */
+        .image-lightbox {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.92); z-index: 1050; display: none;
+            justify-content: center; align-items: center; backdrop-filter: blur(15px);
+        }
+        .lightbox-container {
+            position: relative; max-width: 80vw; max-height: 80vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .lightbox-img {
+            max-width: 80vw; max-height: 80vh; width: auto; height: auto;
+            object-fit: contain; border-radius: 12px; border: 2px solid #d4af37;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+        }
+        .lightbox-caption {
+            margin-top: 12px; font-size: 1rem; font-weight: 700; color: #d4af37;
+            text-align: center; text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+        }
+        .lightbox-close {
+            position: absolute; top: -38px; right: -10px; background: transparent;
+            border: none; color: #ffffff; font-size: 2rem; cursor: pointer;
+        }
+
+        .lightbox-nav-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(13, 18, 28, 0.8); border: 1px solid #d4af37; color: #d4af37;
+            font-size: 1.5rem; width: 45px; height: 45px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; cursor: pointer;
+            transition: all 0.2s ease; z-index: 1060; user-select: none;
+        }
+        .lightbox-nav-btn.prev { left: -65px; }
+        .lightbox-nav-btn.next { right: -65px; }
+
+        /* CEO OTP MODAL STYLING */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px);
+        }
+        .modal-box {
+            background: rgba(13, 18, 28, 0.95); border: 1px solid #d4af37;
+            border-radius: 16px; width: 400px; padding: 26px; box-shadow: 0 24px 48px rgba(0, 0, 0, 0.8);
+        }
+        .modal-header { font-size: 1.25rem; font-weight: 800; color: #d4af37; margin-bottom: 10px; }
+        .btn-modal-group { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+        .btn-modal { padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; }
+        .btn-cancel { background: #334155; color: #fff; }
+        .btn-confirm { background: #d4af37; color: #000; }
+
+        @media (max-width: 768px) {
+            .widget-pill { display: none; }
+            .info-panel {
+                top: auto; bottom: 0; left: 0; right: 0; width: 100vw;
+                border-radius: 20px 20px 0 0; transform: translateY(calc(100% - 70px));
+            }
+            .info-panel.expanded { transform: translateY(0); }
+            .legend-bar, .phone-pill { display: none; }
+            .right-toolbar { top: 60px; right: 10px; }
+            .lightbox-container { max-width: 90vw; max-height: 80vh; }
+            .lightbox-img { max-width: 90vw; max-height: 80vh; }
+            .lightbox-nav-btn.prev { left: 5px; }
+            .lightbox-nav-btn.next { right: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <svg id="dimensionSvg">
+        <defs>
+            <marker id="tick" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6">
+                <line x1="5" y1="0" x2="5" y2="10" stroke="#ffffff" stroke-width="2" />
+            </marker>
+        </defs>
+        <line id="lineW" x1="0" y1="0" x2="0" y2="0" stroke="#ffffff" stroke-width="2.5" marker-start="url(#tick)" marker-end="url(#tick)" />
+        <line id="lineL" x1="0" y1="0" x2="0" y2="0" stroke="#ffffff" stroke-width="2.5" marker-start="url(#tick)" marker-end="url(#tick)" />
+    </svg>
+
+    <div id="dimSideA" class="dimension-label">34.7'</div>
+    <div id="dimSideB" class="dimension-label">65.0'</div>
+
+    <div id="plotOverlayContainer"></div>
+
+    <div id="heroPlotBadge">
+        <div class="badge-title" id="badgePlotTitle">Plot 1</div>
+        <div class="badge-sub" id="badgePlotArea">251 Sq.Yds</div>
+        <div class="badge-owner" id="badgePlotOwner">Owner: Unassigned</div>
+    </div>
+
+    <!-- Header Bar -->
+    <div class="header-bar">
+        <div class="left-branding glass-card">
+            <img src="assets/images/Logo.png" alt="Avenue Logo" class="avenue-logo">
+            <div class="project-title"><span class="brand-neo">NeoPolis</span> <span class="brand-sub">SPRINGS</span></div>
+        </div>
+
+        <div class="widget-pill glass-card">
+            <div class="widget-item"><span id="roleBadge" class="btn-role-badge">CUSTOMER VIEW</span></div>
+            <div class="widget-item"><span id="timeIcon">☀️</span> <strong id="timeModeText">DAY MODE</strong></div>
+            <div class="widget-item">📅 <strong>26 July 2026</strong></div>
+        </div>
+
+        <!-- Top Right Auth Dropdown Widget -->
+        <div class="auth-container">
+            <button class="auth-btn" onclick="toggleAuthDropdown()">
+                👤 <span id="authBtnText">LOGIN</span>
+            </button>
+            <div class="auth-dropdown glass-card" id="authDropdown">
+                <h4 id="authFormTitle">ACCOUNT LOGIN</h4>
+                
+                <div id="loginForm">
+                    <div class="auth-field">
+                        <label>USERNAME</label>
+                        <input type="text" id="loginUsername" placeholder="Enter username">
+                    </div>
+                    <div class="auth-field" style="margin-top:6px;">
+                        <label>PASSWORD</label>
+                        <div class="auth-input-wrapper">
+                            <input type="password" id="loginPassword" placeholder="Enter password">
+                            <span class="toggle-password-eye" onclick="togglePasswordVisibility('loginPassword', this)">👁️</span>
+                        </div>
+                    </div>
+                    <button class="btn-panel btn-gold" style="margin-top:10px;" onclick="performLogin()">LOGIN</button>
+                </div>
+
+                <div id="userSessionBox" style="display:none;">
+                    <p style="font-size:0.75rem; color:#fff;" id="sessionWelcome">Logged in as Rams</p>
+                    <button class="btn-panel btn-outline" style="margin-top:8px;" onclick="showChangePassForm()">🔑 CHANGE PASSWORD</button>
+                    <div id="adminPanelBtn" style="display:none;">
+                        <button class="btn-panel btn-gold" style="margin-top:6px;" onclick="showAdminUserModal()">➕ CREATE USER</button>
+                    </div>
+                    <button class="btn-panel btn-outline" style="margin-top:6px; color:#f56565;" onclick="performLogout()">LOGOUT</button>
+                </div>
+
+                <div id="changePassBox" style="display:none;">
+                    <div class="auth-field">
+                        <label>NEW PASSWORD</label>
+                        <div class="auth-input-wrapper">
+                            <input type="password" id="newPassInput" placeholder="New Password">
+                            <span class="toggle-password-eye" onclick="togglePasswordVisibility('newPassInput', this)">👁️</span>
+                        </div>
+                    </div>
+                    <button class="btn-panel btn-gold" style="margin-top:8px;" onclick="saveNewPassword()">SAVE PASSWORD</button>
+                    <button class="btn-panel btn-outline" style="margin-top:4px;" onclick="backToSessionBox()">CANCEL</button>
+                </div>
+
+                <div id="adminCreateUserBox" style="display:none;">
+                    <div class="auth-field">
+                        <label>NEW USERNAME</label>
+                        <input type="text" id="newUserName" placeholder="Username">
+                    </div>
+                    <div class="auth-field" style="margin-top:4px;">
+                        <label>TEMP PASSWORD</label>
+                        <div class="auth-input-wrapper">
+                            <input type="password" id="newUserPass" placeholder="Temp Password">
+                            <span class="toggle-password-eye" onclick="togglePasswordVisibility('newUserPass', this)">👁️</span>
+                        </div>
+                    </div>
+                    <div class="auth-field" style="margin-top:4px;">
+                        <label>ROLE</label>
+                        <select id="newUserRole">
+                            <option value="sales">Sales</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <button class="btn-panel btn-gold" style="margin-top:8px;" onclick="createAccountByAdmin()">CREATE ACCOUNT</button>
+                    <button class="btn-panel btn-outline" style="margin-top:4px;" onclick="backToSessionBox()">BACK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Collapsible Focus Information Panel -->
+    <div class="info-panel glass-card" id="infoPanel">
+        <div class="info-panel-header" onclick="toggleInfoPanelCollapse()">
+            <div class="panel-label">SEARCH PLOT</div>
+            <div class="collapse-toggle-btn" id="collapseBtn">−</div>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" class="search-input" value="1" placeholder="Enter Plot No. (e.g. 1, 4, 72, 89, 116)" onkeyup="handleSearch(event)">
+        </div>
+
+        <div class="toggle-row">
+            <label>SHOW PLOT AVAILABILITY COLORS</label>
+            <label class="switch">
+                <input type="checkbox" id="availabilityToggle" checked onchange="updatePlotColorsFromDB()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="toggle-row">
+            <label>SHOW MAP LABELS & ROADS</label>
+            <label class="switch">
+                <input type="checkbox" id="hybridMapToggle" checked onchange="toggleHybridMapLabels()">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="panel-label" style="margin-top:6px;">PLOT INFORMATION</div>
+        <div class="plot-title-row">
+            <div class="plot-id" id="plotId">Plot 1</div>
+            <div class="status-badge available" id="plotStatus">AVAILABLE</div>
+        </div>
+
+        <div class="meta-list">
+            <div class="meta-row"><span class="meta-lbl">📐 AREA</span><span class="meta-val" id="plotArea">251 Sq.Yds</span></div>
+            <div class="meta-row"><span class="meta-lbl">📏 DIMENSION</span><span class="meta-val" id="plotDim">34.7' x 65.0'</span></div>
+            <div class="meta-row"><span class="meta-lbl">🧭 FACING</span><span class="meta-val" id="plotFacing">North</span></div>
+            <div class="meta-row" id="ownerMetaRow" style="display:none;"><span class="meta-lbl">👤 OWNER / HOLD</span><span class="meta-val" id="plotOwner">Unassigned</span></div>
+        </div>
+
+        <div class="sales-edit-box" id="salesEditBox">
+            <div class="sales-field">
+                <label>CHANGE STATUS</label>
+                <select id="statusSelect">
+                    <option value="AVAILABLE">AVAILABLE</option>
+                    <option value="RESERVED">RESERVED</option>
+                    <option value="HOLD">HOLD</option>
+                    <option value="SOLD">SOLD (CEO OTP Required)</option>
+                </select>
+            </div>
+            <div class="sales-field">
+                <label>BUYER / PROSPECT NAME</label>
+                <input type="text" id="ownerInput" placeholder="Enter Buyer Name">
+            </div>
+            <div class="sales-field" id="mobileInputBox" style="display:none;">
+                <label>BUYER MOBILE (+91)</label>
+                <input type="text" id="mobileInput" placeholder="10-digit Mobile Number">
+            </div>
+            <button class="btn-panel btn-gold" onclick="savePlotStatus()">💾 SAVE PLOT STATUS</button>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-panel btn-gold" onclick="focusSelectedPlot()">📍 GO TO PLOT</button>
+            <button class="btn-panel btn-outline" onclick="resetToOverview()">🔄 RESET CAMERA</button>
+        </div>
+    </div>
+
+    <div class="phone-pill glass-card">📞 +91 9505 894 894</div>
+
+    <!-- Dynamic Collapsible Right Toolbar -->
+    <div class="right-toolbar glass-card" id="rightToolbar">
+        <button class="right-toolbar-toggle" onclick="toggleRightToolbar()" id="rightToolbarToggleBtn">−</button>
+        <button class="tool-icon-btn active" onclick="focusSelectedPlot()">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-12c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
+            FOCUS
+        </button>
+        <button class="tool-icon-btn" onclick="openParkPlanModal()">
+            <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            GALLERY
+        </button>
+        <button class="tool-icon-btn" onclick="cycleTimeOfDay()">
+            <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+            TIME
+        </button>
+        <button class="tool-icon-btn" id="orbitBtn" onclick="toggleRotateCamera()">
+            <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+            ORBIT
+        </button>
+    </div>
+
+    <!-- LEGEND BAR -->
+    <div class="legend-bar glass-card">
+        <div class="legend-item" onclick="filterLegendStatus('AVAILABLE')"><div class="dot available"></div> AVAILABLE</div>
+        <div class="legend-item" onclick="filterLegendStatus('RESERVED')"><div class="dot reserved"></div> RESERVED</div>
+        <div class="legend-item" onclick="filterLegendStatus('HOLD')"><div class="dot hold"></div> HOLD</div>
+        <div class="legend-item" onclick="filterLegendStatus('SOLD')"><div class="dot sold"></div> SOLD</div>
+    </div>
+
+    <!-- CEO OTP AUTHORIZATION MODAL -->
+    <div id="otpModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">CEO Authorization Required</div>
+            <p style="font-size: 0.82rem; color: #a0aec0; margin-bottom: 14px; line-height: 1.4;">
+                Enter the 6-digit OTP code sent to the CEO mobile (+91 98XXX XXXX) to complete this transaction.
+            </p>
+            <form onsubmit="event.preventDefault(); submitFinalOtpSave();">
+                <input type="text" id="otpInput" maxlength="6" placeholder="Demo Code: 849201" 
+                       style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid #d4af37; border-radius: 8px; color: #fff; text-align: center; letter-spacing: 4px; font-size: 1.1rem; font-weight: bold; outline: none;"
+                       onkeydown="if(event.key === 'Enter') { event.preventDefault(); submitFinalOtpSave(); }">
+                <div class="btn-modal-group">
+                    <button class="btn-modal btn-cancel" type="button" onclick="closeModal('otpModal')">Cancel</button>
+                    <button class="btn-modal btn-confirm" type="submit">Verify & Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PARK & GALLERY MODAL -->
+    <div class="park-modal" id="parkModal">
+        <div class="park-modal-content">
+            <div class="park-modal-header">
+                <h3>🖼️ SITE GALLERY & PARK PLAN</h3>
+                <button class="close-modal-btn" onclick="closeParkPlanModal()">✖</button>
+            </div>
+
+            <div class="upload-section">
+                <div class="upload-row">
+                    <input type="text" id="imgTitleInput" placeholder="Image Title (e.g. Clubhouse View)" style="padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff; font-size: 0.78rem; flex: 1;">
+                    <input type="file" id="imgFileInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                    <button class="btn-panel btn-gold" style="width: auto; padding: 8px 16px;" onclick="document.getElementById('imgFileInput').click()">➕ ADD IMAGE</button>
+                </div>
+
+                <div class="progress-bar-container" id="progressBarContainer">
+                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                </div>
+                <div class="progress-status-text" id="progressStatusText" style="display:none;">
+                    <span id="uploadStatusMsg">Uploading...</span>
+                    <span id="uploadPercentText">0%</span>
+                </div>
+            </div>
+            
+            <div class="gallery-grid" id="galleryGrid"></div>
+        </div>
+    </div>
+
+    <!-- 80% SCALE LIGHTBOX OVERLAY WITH NEXT/PREV NAVIGATION -->
+    <div class="image-lightbox" id="imageLightbox" onclick="closeLightbox(event)">
+        <div class="lightbox-container" onclick="event.stopPropagation()">
+            <button class="lightbox-close" onclick="closeLightbox(event)">✖</button>
+            
+            <div class="lightbox-nav-btn prev" onclick="navigateLightbox(-1)">◀</div>
+            <div class="lightbox-nav-btn next" onclick="navigateLightbox(1)">▶</div>
+
+            <img src="" alt="Enlarged View" id="lightboxImg" class="lightbox-img">
+            <div class="lightbox-caption" id="lightboxCaption">Image Preview</div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = JSON.parse(sessionStorage.getItem('neopolis_user')) || null;
+        let isSalesPerson = currentUser && (currentUser.role === 'sales' || currentUser.role === 'admin');
+
+        const HARDCODED_CONFIG = {
+            "siteOrigin": [80.75431545841093, 16.470777198842512],
+            "rotY": "338", "scaleX": "1", "scaleY": "1", "altitude": "0"
+        };
+
+        const savedConfig = JSON.parse(localStorage.getItem('zenarch_masterplan_config')) || HARDCODED_CONFIG;
+        let siteOrigin = savedConfig.siteOrigin;
+        
+        let heroGroup = null;
+        let loadedModel = null, heroModel = null;
+        let heroBaseBoxSize = new THREE.Vector3(1, 1, 1);
+        let pinDropperMesh = null;
+        let plotMeshes = {};
+        let plotTagElements = {};
+        let selectedPlotNum = null, isRotating = false, timeState = 0, rotateAnimFrame = null;
+        let allowDimensionDraw = false;
+        let currentFocusLngLat = siteOrigin;
+        let currentLightboxIndex = 0;
+        let pendingSavePayload = null;
+
+        const MORTGAGE_LANDS = ["3", "6", "12", "65", "66", "67", "80", "81", "104", "105", "113", "114", "115", "117"];
+        const AMENITY_LANDS = ["116", "119"];
+
+        let userAccounts = JSON.parse(localStorage.getItem('neopolis_users')) || {
+            "admin": { pass: "admin123", role: "admin" },
+            "sales": { pass: "sales123", role: "sales" }
+        };
+
+        let galleryImages = JSON.parse(localStorage.getItem('neopolis_gallery_images')) || [
+            { id: 1, title: "Park Plan Layout", src: "assets/images/park_plan.jpg" }
+        ];
+
+        let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {
+            "1": { dim: "35.0' x 64.5'", area: "251", facing: "North", swapScale: true, status: "AVAILABLE", owner: "Unassigned", reserved_by_id: "" },
+            "2": { dim: "35.0' x 64.5'", area: "252", facing: "North", swapScale: true, status: "AVAILABLE", owner: "Unassigned", reserved_by_id: "" },
+            "4": { dim: "35.0' x 64.3'", area: "250", facing: "North", swapScale: true, status: "AVAILABLE", owner: "Unassigned", reserved_by_id: "" },
+            "89": { dim: "30.0' x 55.0'", area: "183", facing: "East", status: "SOLD", owner: "Rams", reserved_by_id: "sales" }
+        };
+
+        for (let i = 1; i <= 121; i++) {
+            const key = String(i);
+            if (!plotDatabase[key]) {
+                plotDatabase[key] = { dim: "30.0' x 55.0'", area: "183", facing: "East", status: "AVAILABLE", owner: "Unassigned", reserved_by_id: "" };
+            }
+
+            if (MORTGAGE_LANDS.includes(key)) {
+                plotDatabase[key].status = "HOLD";
+                plotDatabase[key].owner = "Mortgaged to APCRDA";
+            } else if (AMENITY_LANDS.includes(key)) {
+                plotDatabase[key].status = "HOLD";
+                plotDatabase[key].owner = "Amenity / Utility";
+            }
+
+            if (i >= 1 && i <= 14) {
+                plotDatabase[key].facing = "North";
+                plotDatabase[key].rot = 90;
+                plotDatabase[key].swapScale = true;
+            } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
+                plotDatabase[key].facing = "West";
+                plotDatabase[key].rot = 180;
+            } else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
+                plotDatabase[key].facing = "East";
+                plotDatabase[key].rot = 180;
+            }
+        }
+
+        function togglePasswordVisibility(inputId, eyeEl) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeEl.innerText = '🙈';
+            } else {
+                input.type = 'password';
+                eyeEl.innerText = '👁️';
+            }
+        }
+
+        function toggleInfoPanelCollapse() {
+            const panel = document.getElementById('infoPanel');
+            const btn = document.getElementById('collapseBtn');
+            panel.classList.toggle('collapsed');
+            btn.innerText = panel.classList.contains('collapsed') ? '+' : '−';
+        }
+
+        function toggleRightToolbar() {
+            const bar = document.getElementById('rightToolbar');
+            const btn = document.getElementById('rightToolbarToggleBtn');
+            bar.classList.toggle('collapsed');
+            btn.innerText = bar.classList.contains('collapsed') ? '+' : '−';
+        }
+
+        async function fetchPlotsFromBackend() {
+            try {
+                const res = await fetch('http://localhost:5000/api/plots');
+                const data = await res.json();
+                if (data.success) {
+                    plotDatabase = { ...plotDatabase, ...data.plots };
+                    updatePlotColorsFromDB();
+                    if (selectedPlotNum) updatePlotUI(selectedPlotNum);
+                }
+            } catch (err) {
+                console.warn("Backend server off. Operating on local memory state.");
+            }
+        }
+
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: {
+                version: 8,
+                sources: {
+                    'esri-satellite': {
+                        type: 'raster',
+                        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+                        tileSize: 256, maxzoom: 19
+                    },
+                    'carto-labels': {
+                        type: 'raster',
+                        tiles: ['https://basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}.png'],
+                        tileSize: 256, maxzoom: 19
+                    }
+                },
+                layers: [
+                    { id: 'background', type: 'background', paint: { 'background-color': '#080a0f' } },
+                    { id: 'esri-satellite-layer', type: 'raster', source: 'esri-satellite' },
+                    { id: 'carto-hybrid-labels', type: 'raster', source: 'carto-labels', layout: { 'visibility': 'visible' } }
+                ]
+            },
+            center: siteOrigin, zoom: 19.14515149676595, pitch: 60, bearing: 70.99999999999989, antialias: true
+        });
+
+        let modelTransform = getTransformMatrix(siteOrigin);
+
+        function getTransformMatrix(lngLat) {
+            return {
+                translateX: maplibregl.MercatorCoordinate.fromLngLat(lngLat, 0).x,
+                translateY: maplibregl.MercatorCoordinate.fromLngLat(lngLat, 0).y,
+                translateZ: maplibregl.MercatorCoordinate.fromLngLat(lngLat, 0).z,
+                rotateX: Math.PI / 2, rotateY: 0, rotateZ: 0,
+                scale: maplibregl.MercatorCoordinate.fromLngLat(lngLat, 0).meterInMercatorCoordinateUnits()
+            };
+        }
+
+        let dirLight, hemiLight;
+
+        const customThreeLayer = {
+            id: '3d-masterplan-layer',
+            type: 'custom',
+            renderingMode: '3d',
+
+            onAdd: function (map, gl) {
+                this.camera = new THREE.Camera();
+                this.scene = new THREE.Scene();
+
+                hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+                this.scene.add(hemiLight);
+
+                dirLight = new THREE.DirectionalLight(0xfffaed, 1.8);
+                dirLight.position.set(120, 250, 100);
+                this.scene.add(dirLight);
+
+                heroGroup = new THREE.Group();
+                heroGroup.visible = false;
+                this.scene.add(heroGroup);
+
+                const loader = new THREE.GLTFLoader();
+
+                loader.load('assets/models/MasterPlan.glb?v=' + Date.now(), (gltf) => {
+                    loadedModel = gltf.scene;
+
+                    loadedModel.traverse((child) => {
+                        if (child.isMesh) {
+                            child.material = child.material.clone();
+                            child.material.side = THREE.DoubleSide;
+                            child.updateMatrixWorld(true);
+
+                            child.userData.originalMaterial = child.material.clone();
+
+                            const plotMatch = child.name.trim().match(/^\d+$/);
+                            if (plotMatch) {
+                                const plotNum = plotMatch[0];
+                                plotMeshes[plotNum] = child;
+                                createOverlayTagForPlot(plotNum);
+                            }
+                        }
+                    });
+
+                    this.scene.add(loadedModel);
+                    updatePlotColorsFromDB();
+                    updateUserRoleUI();
+                    fetchPlotsFromBackend();
+                });
+
+                loader.load('assets/models/HeroPlot.glb?v=' + Date.now(), (gltf) => {
+                    heroModel = gltf.scene;
+                    const heroBox = new THREE.Box3().setFromObject(heroModel);
+                    heroBox.getSize(heroBaseBoxSize);
+
+                    heroModel.traverse((child) => {
+                        if (child.isMesh) {
+                            child.material = child.material.clone();
+                            child.material.side = THREE.DoubleSide;
+                        }
+                    });
+
+                    heroGroup.add(heroModel);
+                    create3DPinDropper();
+                });
+
+                this.renderer = new THREE.WebGLRenderer({ canvas: map.getCanvas(), context: gl, antialias: true, powerPreference: "high-performance" });
+                this.renderer.autoClear = false;
+
+                map.on('render', () => { map.triggerRepaint(); });
+            },
+
+            render: function (gl, matrix) {
+                const rotYVal = THREE.MathUtils.degToRad(parseFloat(savedConfig.rotY));
+                const scaleXVal = parseFloat(savedConfig.scaleX);
+                const scaleYVal = parseFloat(savedConfig.scaleY);
+                const altVal = parseFloat(savedConfig.altitude);
+
+                const rotationX = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(1, 0, 0), modelTransform.rotateX);
+                const rotationY = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 1, 0), rotYVal);
+                const rotationZ = new THREE.Matrix4().makeRotationAxis(new THREE.Vector3(0, 0, 1), modelTransform.rotateZ);
+
+                const baseScale = modelTransform.scale;
+
+                const m = new THREE.Matrix4().fromArray(matrix);
+                const l = new THREE.Matrix4().makeTranslation(
+                    modelTransform.translateX, modelTransform.translateY, modelTransform.translateZ + (altVal * 0.000001)
+                )
+                .scale(new THREE.Vector3(baseScale * scaleXVal, -baseScale * scaleYVal, baseScale * scaleXVal))
+                .multiply(rotationX).multiply(rotationY).multiply(rotationZ);
+
+                this.camera.projectionMatrix = m.multiply(l);
+                this.renderer.resetState();
+                this.renderer.render(this.scene, this.camera);
+
+                updateLayoutPlotNumberPositions();
+                if (allowDimensionDraw) updateDimensionCallouts();
+            }
+        };
+
+        map.on('style.load', () => { map.addLayer(customThreeLayer); });
+
+        function create3DPinDropper() {
+            if (!heroModel) return;
+
+            const pinShape = new THREE.Shape();
+            pinShape.moveTo(0, 0);
+            pinShape.bezierCurveTo(-1.2, 1.8, -2.2, 3.2, -2.2, 4.5);
+            pinShape.bezierCurveTo(-2.2, 6.2, -1.0, 7.5, 0, 7.5);
+            pinShape.bezierCurveTo(1.0, 7.5, 2.2, 6.2, 2.2, 4.5);
+            pinShape.bezierCurveTo(2.2, 3.2, 1.2, 1.8, 0, 0);
+
+            const holePath = new THREE.Path();
+            holePath.absarc(0, 4.5, 0.8, 0, Math.PI * 2, true);
+            pinShape.holes.push(holePath);
+
+            const geometry = new THREE.ExtrudeGeometry(pinShape, { depth: 0.4, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.1, bevelThickness: 0.1 });
+            geometry.center();
+
+            pinDropperMesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ color: 0xFFC82C, side: THREE.DoubleSide }));
+            pinDropperMesh.position.set(0, 3.2, 0);
+
+            heroGroup.add(pinDropperMesh);
+            gsap.to(pinDropperMesh.position, { y: 3.8, duration: 1.2, repeat: -1, yoyo: true, ease: "sine.inOut" });
+        }
+
+        function createOverlayTagForPlot(plotNum) {
+            const container = document.getElementById('plotOverlayContainer');
+            const el = document.createElement('div');
+            el.className = 'plot-number-tag';
+            el.innerText = plotNum;
+            container.appendChild(el);
+            plotTagElements[plotNum] = el;
+        }
+
+        function updateLayoutPlotNumberPositions() {
+            if (!customThreeLayer.camera) return;
+            const zoom = map.getZoom();
+            const showTags = zoom > 18.2;
+
+            Object.keys(plotTagElements).forEach((plotNum) => {
+                const tag = plotTagElements[plotNum];
+                const mesh = plotMeshes[plotNum];
+
+                if (!showTags || !mesh) {
+                    tag.style.opacity = '0';
+                    return;
+                }
+
+                mesh.updateMatrixWorld(true);
+                const box = new THREE.Box3().setFromObject(mesh);
+                const center = new THREE.Vector3();
+                box.getCenter(center);
+
+                const screenPos = center.clone().project(customThreeLayer.camera);
+                const x = (screenPos.x * 0.5 + 0.5) * map.getCanvas().clientWidth;
+                const y = (-(screenPos.y * 0.5) + 0.5) * map.getCanvas().clientHeight;
+
+                tag.style.left = `${x}px`;
+                tag.style.top = `${y}px`;
+                tag.style.opacity = '1';
+            });
+        }
+
+        map.on('click', (e) => {
+            if (!loadedModel || !customThreeLayer.camera) return;
+
+            let closestPlot = null;
+            let minDistance = Infinity;
+
+            Object.keys(plotMeshes).forEach((plotNum) => {
+                const mesh = plotMeshes[plotNum];
+                mesh.updateMatrixWorld(true);
+
+                const box = new THREE.Box3().setFromObject(mesh);
+                const center = new THREE.Vector3();
+                box.getCenter(center);
+
+                const screenPos = center.clone().project(customThreeLayer.camera);
+                const clickX = (screenPos.x * 0.5 + 0.5) * map.getCanvas().clientWidth;
+                const clickY = (-(screenPos.y * 0.5) + 0.5) * map.getCanvas().clientHeight;
+
+                const dist = Math.hypot(e.point.x - clickX, e.point.y - clickY);
+                if (dist < minDistance && dist < 70) {
+                    minDistance = dist;
+                    closestPlot = plotNum;
+                }
+            });
+
+            if (closestPlot) {
+                if (closestPlot === "116" || closestPlot === "119") openParkPlanModal();
+                selectedPlotNum = closestPlot;
+                document.getElementById('searchInput').value = closestPlot;
+                focusSelectedPlot(closestPlot);
+                return;
+            }
+
+            resetToOverview();
+        });
+
+        // ACCURATE CENTERED FLY-TO ENGINE FOR EDGE PLOTS WITH MASTERPLAN DIMMING
+        function focusSelectedPlot(num) {
+            const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
+            selectedPlotNum = query;
+            const targetMesh = plotMeshes[query];
+
+            if (targetMesh) {
+                allowDimensionDraw = false;
+                document.getElementById('dimensionSvg').style.display = 'none';
+                document.getElementById('dimSideA').style.display = 'none';
+                document.getElementById('dimSideB').style.display = 'none';
+                document.getElementById('heroPlotBadge').style.display = 'none';
+
+                targetMesh.updateMatrixWorld(true);
+                
+                const box = new THREE.Box3().setFromObject(targetMesh);
+                const targetSize = new THREE.Vector3();
+                box.getSize(targetSize);
+
+                const center = new THREE.Vector3();
+                box.getCenter(center);
+
+                const dbData = plotDatabase[query] || { area: "251", dim: "34.7' x 65.0'", facing: "North", status: "AVAILABLE", owner: "Unassigned" };
+
+                if (heroGroup) {
+                    let scaleX, scaleZ;
+                    if (dbData.swapScale) {
+                        scaleX = targetSize.z / Math.max(heroBaseBoxSize.x, 0.001);
+                        scaleZ = targetSize.x / Math.max(heroBaseBoxSize.z, 0.001);
+                    } else {
+                        scaleX = targetSize.x / Math.max(heroBaseBoxSize.x, 0.001);
+                        scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
+                    }
+
+                    // INVERT SCALE FOR EAST FACING HERO PLOTS (e.g., East facing orientation)
+                    if (dbData.facing === "East") {
+                        scaleX = -scaleX;
+                    }
+
+                    const raisedY = center.y + 2.2;
+                    heroGroup.position.set(center.x, raisedY, center.z);
+                    if (dbData.rot !== undefined) heroGroup.rotation.set(0, THREE.MathUtils.degToRad(dbData.rot), 0);
+                    
+                    heroGroup.visible = true;
+                    if (pinDropperMesh) pinDropperMesh.scale.set(0.45 / Math.abs(scaleX), 0.45, 0.45 / scaleZ);
+                    heroGroup.scale.set(0, 0, 0);
+
+                    gsap.to(heroGroup.scale, { 
+                        x: -scaleX, y: 1.0, z: -scaleZ, duration: 0.5, ease: "back.out(1.4)",
+                        onComplete: function() {
+                            allowDimensionDraw = true;
+                            document.getElementById('dimensionSvg').style.display = 'block';
+                            document.getElementById('dimSideA').style.display = 'block';
+                            document.getElementById('dimSideB').style.display = 'block';
+                            document.getElementById('heroPlotBadge').style.display = 'block';
+                        }
+                    });
+                }
+
+                updatePlotColorsFromDB();
+
+                map.setPaintProperty('esri-satellite-layer', 'raster-opacity', 0.25);
+
+                const rotYVal = THREE.MathUtils.degToRad(parseFloat(savedConfig.rotY));
+                const scaleXVal = parseFloat(savedConfig.scaleX);
+                const scaleYVal = parseFloat(savedConfig.scaleY);
+
+                const localVector = new THREE.Vector3(center.x * scaleXVal, center.y, center.z * scaleYVal);
+                localVector.applyAxisAngle(new THREE.Vector3(0, 1, 0), rotYVal);
+
+                const mercatorScale = maplibregl.MercatorCoordinate.fromLngLat(siteOrigin, 0).meterInMercatorCoordinateUnits();
+                const siteMercator = maplibregl.MercatorCoordinate.fromLngLat(siteOrigin, 0);
+
+                const targetMercatorX = siteMercator.x + (localVector.x * mercatorScale);
+                const targetMercatorY = siteMercator.y + (localVector.z * mercatorScale);
+
+                const targetLngLatObj = new maplibregl.MercatorCoordinate(targetMercatorX, targetMercatorY, 0).toLngLat();
+                currentFocusLngLat = [targetLngLatObj.lng, targetLngLatObj.lat];
+
+                map.flyTo({ 
+                    center: currentFocusLngLat, 
+                    zoom: 20.35, 
+                    pitch: 62, 
+                    bearing: map.getBearing(), 
+                    duration: 1200,
+                    padding: { top: 0, bottom: 0, left: 0, right: 0 } 
+                });
+                
+                updatePlotUI(query);
+            }
+        }
+
+        function updatePlotUI(plotNum) {
+            document.getElementById('plotId').innerText = `Plot ${plotNum}`;
+            const plotData = plotDatabase[plotNum] || { area: '251', dim: "34.7' x 65.0'", facing: 'North', status: 'AVAILABLE', owner: 'Unassigned' };
+
+            document.getElementById('plotArea').innerText = `${plotData.area} Sq.Yds`;
+            document.getElementById('plotDim').innerText = plotData.dim;
+            document.getElementById('plotFacing').innerText = plotData.facing;
+
+            const ownerRow = document.getElementById('ownerMetaRow');
+            const ownerBadge = document.getElementById('badgePlotOwner');
+
+            if (isSalesPerson && plotData.status !== 'AVAILABLE' && plotData.owner && plotData.owner !== 'Unassigned') {
+                document.getElementById('plotOwner').innerText = plotData.owner;
+                ownerRow.style.display = 'flex';
+                ownerBadge.innerText = `Owner: ${plotData.owner}`;
+                ownerBadge.style.display = 'block';
+            } else {
+                ownerRow.style.display = 'none';
+                ownerBadge.style.display = 'none';
+            }
+
+            document.getElementById('badgePlotTitle').innerText = `Plot ${plotNum}`;
+            document.getElementById('badgePlotArea').innerText = `${plotData.area} Sq.Yds`;
+
+            const badge = document.getElementById('plotStatus');
+            badge.innerText = plotData.status;
+            badge.className = `status-badge ${plotData.status.toLowerCase()}`;
+
+            if (isSalesPerson) {
+                document.getElementById('statusSelect').value = plotData.status;
+                document.getElementById('ownerInput').value = plotData.owner === 'Unassigned' ? '' : (plotData.owner || '');
+                document.getElementById('mobileInput').value = plotData.buyer_mobile || '';
+                toggleMobileField(plotData.status);
+            }
+        }
+
+        function toggleMobileField(status) {
+            document.getElementById('mobileInputBox').style.display = status === 'SOLD' ? 'block' : 'none';
+        }
+
+        document.getElementById('statusSelect').addEventListener('change', function(e) {
+            toggleMobileField(e.target.value);
+        });
+
+        function savePlotStatus() {
+            if (!selectedPlotNum || !isSalesPerson) return;
+            const newStatus = document.getElementById('statusSelect').value;
+            const ownerName = document.getElementById('ownerInput').value.trim();
+            const mobileNumber = document.getElementById('mobileInput').value.trim();
+            const currentPlot = plotDatabase[selectedPlotNum] || {};
+
+            if (currentPlot.status === 'RESERVED' && currentPlot.reserved_by_id && currentPlot.reserved_by_id !== currentUser.username && currentUser.role !== 'admin') {
+                alert(`Access Denied: Plot ${selectedPlotNum} is locked by ${currentPlot.reserved_by_id}. Only they or an Admin can modify this.`);
+                return;
+            }
+
+            if (newStatus === 'SOLD' && (!ownerName || !mobileNumber)) {
+                alert("Buyer Name and Mobile Number are required for SOLD status.");
+                return;
+            }
+
+            pendingSavePayload = {
+                plotId: selectedPlotNum,
+                newStatus: newStatus,
+                buyerName: ownerName,
+                buyerMobile: mobileNumber,
+                oldStatus: currentPlot.status
+            };
+
+            const requiresOtp = (newStatus === 'SOLD') || (currentPlot.status === 'SOLD' && newStatus === 'AVAILABLE');
+            if (requiresOtp) {
+                const otpInput = document.getElementById('otpInput');
+                otpInput.value = '';
+                document.getElementById('otpModal').style.display = 'flex';
+                setTimeout(() => otpInput.focus(), 50);
+            } else {
+                executeFinalSavePayload('');
+            }
+        }
+
+        function submitFinalOtpSave() {
+            const inputOtp = document.getElementById('otpInput').value.trim();
+            if (inputOtp !== "849201") {
+                alert("Invalid CEO Authorization OTP! Enter code: 849201");
+                return;
+            }
+            closeModal('otpModal');
+            executeFinalSavePayload(inputOtp);
+        }
+
+        async function executeFinalSavePayload(otpCode) {
+            if (!pendingSavePayload) return;
+            const { plotId, newStatus, buyerName, buyerMobile } = pendingSavePayload;
+
+            const payload = {
+                plotId: plotId,
+                newStatus: newStatus,
+                buyerName: buyerName,
+                buyerMobile: buyerMobile,
+                user: { id: currentUser.username, displayName: currentUser.username, role: currentUser.role },
+                otp: otpCode
+            };
+
+            const applyLocalFallback = () => {
+                plotDatabase[plotId] = {
+                    ...plotDatabase[plotId],
+                    status: newStatus,
+                    owner: newStatus === 'AVAILABLE' ? 'Unassigned' : (buyerName || 'Reserved'),
+                    buyer_mobile: newStatus === 'SOLD' ? buyerMobile : '',
+                    reserved_by_id: newStatus === 'RESERVED' ? currentUser.username : (plotDatabase[plotId].reserved_by_id || '')
+                };
+                localStorage.setItem('neopolis_plot_db', JSON.stringify(plotDatabase));
+                
+                updatePlotColorsFromDB();
+                updatePlotUI(plotId);
+            };
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 1500);
+
+                const response = await fetch('http://localhost:5000/api/plots/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+                const result = await response.json();
+
+                if (result.success) {
+                    plotDatabase[plotId] = { ...plotDatabase[plotId], ...result.updatedPlot, owner: result.updatedPlot.buyer_name || 'Reserved' };
+                    localStorage.setItem('neopolis_plot_db', JSON.stringify(plotDatabase));
+                    updatePlotColorsFromDB();
+                    updatePlotUI(plotId);
+                    alert(result.message);
+                } else {
+                    alert(`Server Security Error: ${result.message}`);
+                }
+            } catch (err) {
+                console.warn("Node backend unreachable. Applying client-side update...", err);
+                applyLocalFallback();
+                alert(`Plot ${plotId} status updated to ${newStatus}`);
+            } finally {
+                pendingSavePayload = null;
+            }
+        }
+
+        // COLOR ENGINE: USES MESH BASIC MATERIAL EMISSIVE OVERLAYS FOR 100% VIVID SOLID COLORS WITH STATUS PLOTS DIMMING
+        function updatePlotColorsFromDB() {
+            const showColors = document.getElementById('availabilityToggle').checked;
+
+            Object.keys(plotMeshes).forEach((plotNum) => {
+                const mesh = plotMeshes[plotNum];
+                const data = plotDatabase[plotNum];
+
+                if (data && mesh.material) {
+                    const isParkOrOpen = AMENITY_LANDS.includes(plotNum) || MORTGAGE_LANDS.includes(plotNum) || mesh.name.toLowerCase().includes("park") || mesh.name.toLowerCase().includes("open");
+
+                    if (showColors) {
+                        let colorHex = 0x22c55e;
+                        if (selectedPlotNum && plotNum === selectedPlotNum) {
+                            colorHex = 0x22c55e;
+                        } else if (data.status === 'RESERVED') {
+                            colorHex = 0xffea00;
+                        } else if (data.status === 'HOLD' || isParkOrOpen) {
+                            colorHex = 0x0066ff;
+                        } else if (data.status === 'SOLD') {
+                            colorHex = 0xff0033;
+                        }
+
+                        const mat = new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide });
+                        if (selectedPlotNum && plotNum !== selectedPlotNum) {
+                            mat.color.multiplyScalar(0.5); // Dim all remaining unselected plots (including status plots)
+                        }
+                        mesh.material = mat;
+                    } else {
+                        if (mesh.userData.originalMaterial) {
+                            mesh.material = mesh.userData.originalMaterial.clone();
+                            if (selectedPlotNum && plotNum !== selectedPlotNum) {
+                                mesh.material.color.multiplyScalar(0.5);
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Master plan base ground and road meshes dim slightly when a plot is selected
+            if (loadedModel) {
+                loadedModel.traverse((child) => {
+                    if (child.isMesh && !plotMeshes[child.name.trim()]) {
+                        if (selectedPlotNum) {
+                            child.material = new THREE.MeshBasicMaterial({ color: 0x111C38, side: THREE.DoubleSide });
+                        } else if (child.userData.originalMaterial) {
+                            child.material = child.userData.originalMaterial.clone();
+                        }
+                    }
+                });
+            }
+        }
+
+        function toggleHybridMapLabels() {
+            const showLabels = document.getElementById('hybridMapToggle').checked;
+            map.setLayoutProperty('carto-hybrid-labels', 'visibility', showLabels ? 'visible' : 'none');
+        }
+
+        function toggleAuthDropdown() {
+            document.getElementById('authDropdown').classList.toggle('active');
+        }
+
+        function performLogin() {
+            const u = document.getElementById('loginUsername').value.trim();
+            const p = document.getElementById('loginPassword').value.trim();
+
+            if (userAccounts[u] && userAccounts[u].pass === p) {
+                currentUser = { username: u, role: userAccounts[u].role };
+                sessionStorage.setItem('neopolis_user', JSON.stringify(currentUser));
+                isSalesPerson = true;
+
+                updateUserRoleUI();
+                toggleAuthDropdown();
+                if (selectedPlotNum) updatePlotUI(selectedPlotNum);
+                alert(`Welcome back, ${u}!`);
+            } else {
+                alert("Invalid Username or Password!");
+            }
+        }
+
+        function performLogout() {
+            sessionStorage.removeItem('neopolis_user');
+            currentUser = null;
+            isSalesPerson = false;
+            updateUserRoleUI();
+            toggleAuthDropdown();
+            if (selectedPlotNum) updatePlotUI(selectedPlotNum);
+        }
+
+        function updateUserRoleUI() {
+            if (currentUser) {
+                document.getElementById('roleBadge').innerText = `${currentUser.role.toUpperCase()} MODE`;
+                document.getElementById('authBtnText').innerText = currentUser.username;
+                document.getElementById('salesEditBox').classList.add('active');
+
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('userSessionBox').style.display = 'block';
+                document.getElementById('sessionWelcome').innerText = `Logged in as: ${currentUser.username} (${currentUser.role})`;
+
+                if (currentUser.role === 'admin') {
+                    document.getElementById('adminPanelBtn').style.display = 'block';
+                } else {
+                    document.getElementById('adminPanelBtn').style.display = 'none';
+                }
+            } else {
+                document.getElementById('roleBadge').innerText = "CUSTOMER VIEW";
+                document.getElementById('authBtnText').innerText = "LOGIN";
+                document.getElementById('salesEditBox').classList.remove('active');
+
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('userSessionBox').style.display = 'none';
+                document.getElementById('changePassBox').style.display = 'none';
+                document.getElementById('adminCreateUserBox').style.display = 'none';
+            }
+        }
+
+        function showChangePassForm() {
+            document.getElementById('userSessionBox').style.display = 'none';
+            document.getElementById('changePassBox').style.display = 'block';
+        }
+
+        function saveNewPassword() {
+            const newP = document.getElementById('newPassInput').value.trim();
+            if (newP && currentUser) {
+                userAccounts[currentUser.username].pass = newP;
+                localStorage.setItem('neopolis_users', JSON.stringify(userAccounts));
+                alert("Password updated successfully!");
+                backToSessionBox();
+            }
+        }
+
+        function showAdminUserModal() {
+            document.getElementById('userSessionBox').style.display = 'none';
+            document.getElementById('adminCreateUserBox').style.display = 'block';
+        }
+
+        function createAccountByAdmin() {
+            const newUser = document.getElementById('newUserName').value.trim();
+            const newPass = document.getElementById('newUserPass').value.trim();
+            const newRole = document.getElementById('newUserRole').value;
+
+            if (newUser && newPass) {
+                userAccounts[newUser] = { pass: newPass, role: newRole };
+                localStorage.setItem('neopolis_users', JSON.stringify(userAccounts));
+                alert(`Account created for ${newUser} (${newRole})!`);
+                backToSessionBox();
+            }
+        }
+
+        function backToSessionBox() {
+            document.getElementById('changePassBox').style.display = 'none';
+            document.getElementById('adminCreateUserBox').style.display = 'none';
+            document.getElementById('userSessionBox').style.display = 'block';
+        }
+
+        function cycleTimeOfDay() {
+            timeState = (timeState + 1) % 3;
+            if (timeState === 0) {
+                document.getElementById('timeIcon').innerText = "☀️"; document.getElementById('timeModeText').innerText = "DAY MODE";
+                gsap.to(dirLight, { intensity: 1.8, duration: 1.2 });
+                map.setPaintProperty('esri-satellite-layer', 'raster-brightness-max', 1.0);
+            } else if (timeState === 1) {
+                document.getElementById('timeIcon').innerText = "🌅"; document.getElementById('timeModeText').innerText = "SUNSET";
+                gsap.to(dirLight, { intensity: 1.0, duration: 1.2 });
+                map.setPaintProperty('esri-satellite-layer', 'raster-brightness-max', 0.7);
+            } else {
+                document.getElementById('timeIcon').innerText = "🌙"; document.getElementById('timeModeText').innerText = "NIGHT MODE";
+                gsap.to(dirLight, { intensity: 0.3, duration: 1.2 });
+                map.setPaintProperty('esri-satellite-layer', 'raster-brightness-max', 0.35);
+            }
+        }
+
+        function toggleRotateCamera() {
+            isRotating = !isRotating;
+            document.getElementById('orbitBtn').classList.toggle('active', isRotating);
+            
+            function slowOrbit() {
+                if (!isRotating) return;
+                const targetCenter = selectedPlotNum ? currentFocusLngLat : siteOrigin;
+                map.jumpTo({ center: targetCenter, bearing: map.getBearing() + 0.075 });
+                rotateAnimFrame = requestAnimationFrame(slowOrbit);
+            }
+
+            if (isRotating) slowOrbit(); 
+            else if (rotateAnimFrame) cancelAnimationFrame(rotateAnimFrame);
+        }
+
+        function resetToOverview() {
+            if (rotateAnimFrame) cancelAnimationFrame(rotateAnimFrame);
+            isRotating = false; selectedPlotNum = null; allowDimensionDraw = false;
+            currentFocusLngLat = siteOrigin;
+            document.getElementById('orbitBtn').classList.remove('active');
+
+            if (heroGroup) heroGroup.visible = false;
+            document.getElementById('dimensionSvg').style.display = 'none';
+            document.getElementById('dimSideA').style.display = 'none';
+            document.getElementById('dimSideB').style.display = 'none';
+            document.getElementById('heroPlotBadge').style.display = 'none';
+
+            updatePlotColorsFromDB();
+            map.setPaintProperty('esri-satellite-layer', 'raster-opacity', 1.0);
+            map.flyTo({ center: siteOrigin, zoom: 19.14515149676595, pitch: 60, bearing: 70.99999999999989, duration: 1200 });
+        }
+
+        function updateDimensionCallouts() {
+            if (!heroGroup || !heroGroup.visible || !selectedPlotNum || !allowDimensionDraw) return;
+
+            heroGroup.updateMatrixWorld(true);
+            const box = new THREE.Box3().setFromObject(heroGroup);
+
+            const topY = box.min.y + 0.2;
+            const corners = [
+                new THREE.Vector3(box.min.x, topY, box.max.z),
+                new THREE.Vector3(box.max.x, topY, box.max.z),
+                new THREE.Vector3(box.max.x, topY, box.min.z)
+            ];
+
+            const screenPoints = corners.map(v => {
+                const clone = v.clone().project(customThreeLayer.camera);
+                return {
+                    x: (clone.x * 0.5 + 0.5) * map.getCanvas().clientWidth,
+                    y: (-(clone.y * 0.5) + 0.5) * map.getCanvas().clientHeight
+                };
+            });
+
+            const lineW = document.getElementById('lineW'), lineL = document.getElementById('lineL');
+            if (lineW && lineL) {
+                lineW.setAttribute('x1', screenPoints[0].x); lineW.setAttribute('y1', screenPoints[0].y);
+                lineW.setAttribute('x2', screenPoints[1].x); lineW.setAttribute('y2', screenPoints[1].y);
+
+                lineL.setAttribute('x1', screenPoints[1].x); lineL.setAttribute('y1', screenPoints[1].y);
+                lineL.setAttribute('x2', screenPoints[2].x); lineL.setAttribute('y2', screenPoints[2].y);
+            }
+
+            const labelA = document.getElementById('dimSideA'), labelB = document.getElementById('dimSideB');
+            const plotData = plotDatabase[selectedPlotNum] || { dim: "34.7' x 65.0'", facing: "North" };
+            const dimParts = plotData.dim.split('x');
+
+            if (labelA && labelB && dimParts.length === 2) {
+                const plotInt = parseInt(selectedPlotNum, 10);
+                if (plotInt >= 1 && plotInt <= 14) {
+                    labelA.innerText = dimParts[0].trim();
+                    labelB.innerText = dimParts[1].trim();
+                } else {
+                    labelA.innerText = dimParts[1].trim();
+                    labelB.innerText = dimParts[0].trim();
+                }
+
+                labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
+                labelA.style.top = `${(screenPoints[0].y + screenPoints[1].y) / 2 - 10}px`;
+
+                labelB.style.left = `${(screenPoints[1].x + screenPoints[2].x) / 2 + 15}px`;
+                labelB.style.top = `${(screenPoints[1].y + screenPoints[2].y) / 2}px`;
+            }
+
+            const centerVector = new THREE.Vector3();
+            box.getCenter(centerVector);
+            const centerScreen = centerVector.project(customThreeLayer.camera);
+            const badgeEl = document.getElementById('heroPlotBadge');
+            if (badgeEl) {
+                badgeEl.style.left = `${(centerScreen.x * 0.5 + 0.5) * map.getCanvas().clientWidth}px`;
+                badgeEl.style.top = `${(-(centerScreen.y * 0.5) + 0.5) * map.getCanvas().clientHeight - 30}px`;
+            }
+        }
+
+        function openParkPlanModal() {
+            renderGalleryGrid();
+            document.getElementById('parkModal').style.display = 'flex';
+        }
+
+        function closeParkPlanModal() {
+            document.getElementById('parkModal').style.display = 'none';
+        }
+
+        function renderGalleryGrid() {
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = '';
+
+            galleryImages.forEach((img, idx) => {
+                const card = document.createElement('div');
+                card.className = 'gallery-card';
+                card.onclick = function() { openLightboxAtIndex(idx); };
+                card.innerHTML = `
+                    <img src="${img.src}" alt="${img.title}">
+                    <div class="gallery-card-title">${img.title}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            const titleInput = document.getElementById('imgTitleInput').value.trim() || "Uploaded Image";
+
+            if (file) {
+                const container = document.getElementById('progressBarContainer');
+                const fill = document.getElementById('progressBarFill');
+                const statusBox = document.getElementById('progressStatusText');
+                const statusMsg = document.getElementById('uploadStatusMsg');
+                const percentText = document.getElementById('uploadPercentText');
+
+                container.style.display = 'block';
+                statusBox.style.display = 'flex';
+                fill.style.width = '0%';
+                statusMsg.innerText = "Uploading...";
+                percentText.innerText = "0%";
+
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    fill.style.width = `${progress}%`;
+                    percentText.innerText = `${progress}%`;
+
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        statusMsg.innerText = "Upload Complete!";
+
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const newImage = {
+                                id: Date.now(),
+                                title: titleInput,
+                                src: event.target.result
+                            };
+
+                            galleryImages.push(newImage);
+                            localStorage.setItem('neopolis_gallery_images', JSON.stringify(galleryImages));
+
+                            setTimeout(() => {
+                                document.getElementById('imgTitleInput').value = '';
+                                container.style.display = 'none';
+                                statusBox.style.display = 'none';
+                                renderGalleryGrid();
+                            }, 300);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }, 30);
+            }
+        }
+
+        function openLightboxAtIndex(index) {
+            if (galleryImages.length === 0) return;
+            currentLightboxIndex = index;
+            const img = galleryImages[currentLightboxIndex];
+
+            document.getElementById('lightboxImg').src = img.src;
+            document.getElementById('lightboxCaption').innerText = img.title;
+            document.getElementById('imageLightbox').style.display = 'flex';
+        }
+
+        function navigateLightbox(direction) {
+            if (galleryImages.length === 0) return;
+            currentLightboxIndex = (currentLightboxIndex + direction + galleryImages.length) % galleryImages.length;
+            const img = galleryImages[currentLightboxIndex];
+
+            document.getElementById('lightboxImg').src = img.src;
+            document.getElementById('lightboxCaption').innerText = img.title;
+        }
+
+        function closeLightbox(e) {
+            document.getElementById('imageLightbox').style.display = 'none';
+        }
+
+        function closeModal(id) { document.getElementById('imageLightbox').style.display = 'none'; }
+
+        window.addEventListener('keydown', (e) => {
+            const lightbox = document.getElementById('imageLightbox');
+            if (lightbox && lightbox.style.display === 'flex') {
+                if (e.key === 'ArrowLeft') navigateLightbox(-1);
+                if (e.key === 'ArrowRight') navigateLightbox(1);
+                if (e.key === 'Escape') closeLightbox(e);
+            }
+        });
+
+        function handleSearch(e) { if (e.key === 'Enter') focusSelectedPlot(); }
+    </script>
+</body>
+</html>
