@@ -231,7 +231,8 @@
         }
         #heroPlotBadge .badge-title { font-size: 0.9rem; font-weight: 800; color: #d4af37; }
         #heroPlotBadge .badge-sub { font-size: 0.7rem; color: #ffffff; font-weight: 600; }
-        #heroPlotBadge .badge-owner { font-size: 0.68rem; color: #ffc107; font-weight: 700; margin-top: 2px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 2px; display: none; }
+        #heroPlotBadge .badge-status { font-size: 0.65rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; margin-top: 5px; display: inline-block; text-transform: uppercase; }
+        #heroPlotBadge .badge-owner { font-size: 0.68rem; color: #ffc107; font-weight: 700; margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 3px; display: none; }
 
         .plot-number-tag {
             position: absolute; pointer-events: none; z-index: 5;
@@ -340,14 +341,14 @@
         @media (max-width: 768px) {
             .widget-pill { display: none; }
             
-            /* Fixed Mobile Bottom Sheet */
+            /* Fixed Mobile Bottom Sheet: Restricted to exactly 50% screen height */
             .info-panel {
                 top: auto !important; 
                 bottom: 0 !important; 
                 left: 0 !important; 
                 right: 0 !important; 
                 width: 100vw !important;
-                max-height: 75vh !important;
+                max-height: 50vh !important; /* Forces panel to take up only 50% */
                 overflow-y: auto !important;
                 border-radius: 20px 20px 0 0 !important;
                 transform: translateY(calc(100% - 65px));
@@ -388,9 +389,11 @@
 
     <div id="plotOverlayContainer"></div>
 
+    <!-- Enhanced Hero Badge with dynamic status tag -->
     <div id="heroPlotBadge">
         <div class="badge-title" id="badgePlotTitle">Plot 1</div>
         <div class="badge-sub" id="badgePlotArea">251 Sq.Yds</div>
+        <div class="badge-status" id="badgePlotStatus">AVAILABLE</div>
         <div class="badge-owner" id="badgePlotOwner">Owner: Unassigned</div>
     </div>
 
@@ -988,6 +991,7 @@
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
             selectedPlotNum = query;
             
+            // Automatically expand the panel to exactly 50% max-height when a plot is selected
             const infoPanel = document.getElementById('infoPanel');
             if (infoPanel) {
                 infoPanel.classList.remove('collapsed');
@@ -1105,6 +1109,20 @@
 
             document.getElementById('badgePlotTitle').innerText = `Plot ${plotNum}`;
             document.getElementById('badgePlotArea').innerText = `${plotData.area} Sq.Yds`;
+            
+            // Dynamic generation of Status in the floating 3D hero plot badge
+            const badgeStatusEl = document.getElementById('badgePlotStatus');
+            if (badgeStatusEl) {
+                badgeStatusEl.innerText = plotData.status;
+                let bgColor = '#22c55e'; // AVAILABLE
+                let textColor = '#ffffff';
+                if (plotData.status === 'SOLD') { bgColor = '#ff0033'; }
+                else if (plotData.status === 'RESERVED') { bgColor = '#ffea00'; textColor = '#000000'; }
+                else if (plotData.status === 'HOLD') { bgColor = '#0066ff'; }
+                
+                badgeStatusEl.style.backgroundColor = bgColor;
+                badgeStatusEl.style.color = textColor;
+            }
 
             const badge = document.getElementById('plotStatus');
             badge.innerText = plotData.status;
@@ -1429,6 +1447,14 @@
             document.getElementById('dimSideA').style.display = 'none';
             document.getElementById('dimSideB').style.display = 'none';
             document.getElementById('heroPlotBadge').style.display = 'none';
+            
+            // Automatically collapse panel when closing plot
+            const infoPanel = document.getElementById('infoPanel');
+            if (infoPanel) {
+                infoPanel.classList.add('collapsed');
+                infoPanel.classList.remove('expanded');
+                document.getElementById('collapseBtn').innerText = '+';
+            }
 
             updatePlotColorsFromDB();
             map.setPaintProperty('esri-satellite-layer', 'raster-opacity', 1.0);
