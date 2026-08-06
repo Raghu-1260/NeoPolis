@@ -184,15 +184,15 @@
             padding: 8px 16px; border-radius: 30px; font-size: 0.78rem; font-weight: 700; color: #fff;
         }
 
-        /* Dynamic Collapsible Right Toolbar - Now Draggable! */
+        /* Dynamic Collapsible Right Toolbar - Draggable */
         .right-toolbar {
             position: absolute; top: 110px; right: 15px; z-index: 10;
             display: flex; flex-direction: column; gap: 12px;
             padding: 12px 8px; border-radius: 16px;
             transition: max-height 0.3s ease, padding 0.3s ease;
             overflow: hidden; max-height: 350px;
-            cursor: grab; /* Shows a grab hand on desktop */
-            touch-action: none; /* Crucial for smooth mobile dragging */
+            cursor: grab;
+            touch-action: none;
         }
         .right-toolbar:active { cursor: grabbing; }
         .right-toolbar.collapsed { max-height: 42px; padding: 6px; }
@@ -352,14 +352,13 @@
                 left: 0 !important; 
                 right: 0 !important; 
                 width: 100vw !important;
-                max-height: 50vh !important; /* Forces panel to take up only 50% */
+                max-height: 50vh !important;
                 overflow-y: auto !important;
                 border-radius: 20px 20px 0 0 !important;
                 transform: translateY(calc(100% - 65px));
                 transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
             }
             
-            /* Opens full panel when active */
             .info-panel.expanded,
             .info-panel:not(.collapsed) {
                 transform: translateY(0) !important;
@@ -411,7 +410,8 @@
         <div class="widget-pill glass-card">
             <div class="widget-item"><span id="roleBadge" class="btn-role-badge">CUSTOMER VIEW</span></div>
             <div class="widget-item"><span id="timeIcon">☀️</span> <strong id="timeModeText">DAY MODE</strong></div>
-            <div class="widget-item">📅 <strong>26 July 2026</strong></div>
+            <!-- Dynamic Date ID added here -->
+            <div class="widget-item">📅 <strong id="currentDateDisplay">Loading...</strong></div>
         </div>
 
         <!-- Top Right Auth Dropdown Widget -->
@@ -440,9 +440,20 @@
                 <div id="userSessionBox" style="display:none;">
                     <p style="font-size:0.75rem; color:#fff;" id="sessionWelcome">Logged in as Rams</p>
                     <button class="btn-panel btn-outline" style="margin-top:8px;" onclick="showChangePassForm()">🔑 CHANGE PASSWORD</button>
+                    
                     <div id="adminPanelBtn" style="display:none;">
                         <button class="btn-panel btn-gold" style="margin-top:6px;" onclick="showAdminUserModal()">➕ CREATE USER</button>
+                        
+                        <!-- NEW: Admin Exclusive CEO Number Settings -->
+                        <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+                            <label style="font-size: 0.65rem; color: #a0aec0; font-weight: 700;">CEO MOBILE (ADMIN ONLY)</label>
+                            <div style="display: flex; gap: 5px; margin-top: 4px;">
+                                <input type="text" id="adminCeoNumber" placeholder="98XXXXXX" style="width: 100%; padding: 6px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff; font-size: 0.75rem;">
+                                <button class="btn-panel btn-gold" style="width:auto; padding: 6px 10px;" onclick="saveCeoNumber()">SAVE</button>
+                            </div>
+                        </div>
                     </div>
+
                     <button class="btn-panel btn-outline" style="margin-top:6px; color:#f56565;" onclick="performLogout()">LOGOUT</button>
                 </div>
 
@@ -495,10 +506,11 @@
             <input type="text" id="searchInput" class="search-input" value="1" placeholder="Enter Plot No. (e.g. 1, 4, 72, 89, 116)" onkeyup="handleSearch(event)">
         </div>
 
+        <!-- NEW: Toggled OFF by default -->
         <div class="toggle-row">
             <label>SHOW PLOT AVAILABILITY COLORS</label>
             <label class="switch">
-                <input type="checkbox" id="availabilityToggle" checked onchange="updatePlotColorsFromDB()">
+                <input type="checkbox" id="availabilityToggle" onchange="updatePlotColorsFromDB()">
                 <span class="slider"></span>
             </label>
         </div>
@@ -521,6 +533,8 @@
             <div class="meta-row"><span class="meta-lbl">📐 AREA</span><span class="meta-val" id="plotArea">251 Sq.Yds</span></div>
             <div class="meta-row"><span class="meta-lbl">📏 DIMENSION</span><span class="meta-val" id="plotDim">34.7' x 65.0'</span></div>
             <div class="meta-row"><span class="meta-lbl">🧭 FACING</span><span class="meta-val" id="plotFacing">North</span></div>
+            <!-- NEW: Purchase Date Row -->
+            <div class="meta-row" id="purchaseDateRow" style="display:none;"><span class="meta-lbl">🗓️ PURCHASED ON</span><span class="meta-val" id="plotPurchaseDate">-</span></div>
             <div class="meta-row" id="ownerMetaRow" style="display:none;"><span class="meta-lbl">👤 OWNER / HOLD</span><span class="meta-val" id="plotOwner">Unassigned</span></div>
         </div>
 
@@ -572,6 +586,12 @@
             <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
             ORBIT
         </button>
+        
+        <!-- NEW GOOGLE MAPS BUTTON -->
+        <button class="tool-icon-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=16.470777198842512,80.75431545841093', '_blank')">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            MAPS
+        </button>
     </div>
 
     <!-- LEGEND BAR -->
@@ -587,7 +607,7 @@
         <div class="modal-box">
             <div class="modal-header">CEO Authorization Required</div>
             <p style="font-size: 0.82rem; color: #a0aec0; margin-bottom: 14px; line-height: 1.4;">
-                Enter the 6-digit OTP code sent to the CEO mobile (+91 98XXX XXXX) to complete this transaction.
+                Enter the 6-digit OTP code sent to the CEO mobile (+91 <span id="otpCeoDisplayNumber">98XXX XXXX</span>) to complete this transaction.
             </p>
             <form onsubmit="event.preventDefault(); submitFinalOtpSave();">
                 <input type="text" id="otpInput" maxlength="6" placeholder="Demo Code: 849201" 
@@ -645,6 +665,9 @@
     <script>
         let currentUser = JSON.parse(sessionStorage.getItem('neopolis_user')) || null;
         let isSalesPerson = currentUser && (currentUser.role === 'sales' || currentUser.role === 'admin');
+        
+        // NEW: Load Admin CEO Number
+        let ceoMobileNumber = localStorage.getItem('neopolis_ceo_mobile') || "98XXX XXXX";
 
         const HARDCODED_CONFIG = {
             "siteOrigin": [80.75431545841093, 16.470777198842512],
@@ -682,10 +705,10 @@
             "1": { dim: "35.0' x 64.5'", area: "251", facing: "North", swapScale: true, status: "AVAILABLE", owner: "Unassigned", reserved_by_id: "" },
             "2": { dim: "35.0' x 64.5'", area: "252", facing: "North", swapScale: true, status: "AVAILABLE", owner: "Unassigned", reserved_by_id: "" },
             "4": { dim: "35.0' x 64.3'", area: "250", facing: "North", swapScale: true, status: "AVAILABLE", owner: "Unassigned", reserved_by_id: "" },
-            "89": { dim: "30.0' x 55.0'", area: "183", facing: "East", status: "SOLD", owner: "Rams", reserved_by_id: "sales" }
+            "89": { dim: "30.0' x 55.0'", area: "183", facing: "East", status: "SOLD", owner: "Rams", reserved_by_id: "sales", purchase_date: "05 Aug 2026" }
         };
 
-        // NEW: Ensure all default plots are initialized with standard size 30' x 55'
+        // Initialize default sizes explicitly
         for (let i = 1; i <= 121; i++) {
             const key = String(i);
             if (!plotDatabase[key]) {
@@ -712,6 +735,16 @@
                 plotDatabase[key].rot = 180;
             }
         }
+        
+        // NEW: Dynamic Live Clock Function
+        function updateDynamicDate() {
+            const options = { day: '2-digit', month: 'short', year: 'numeric' };
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('en-GB', options);
+            document.getElementById('currentDateDisplay').innerText = dateStr;
+        }
+        setInterval(updateDynamicDate, 60000); 
+        updateDynamicDate();
 
         function togglePasswordVisibility(inputId, eyeEl) {
             const input = document.getElementById(inputId);
@@ -776,7 +809,8 @@
                     { id: 'carto-hybrid-labels', type: 'raster', source: 'carto-labels', layout: { 'visibility': 'visible' } }
                 ]
             },
-            center: siteOrigin, zoom: 19.14515149676595, pitch: 60, bearing: 70.99999999999989, antialias: true
+            // NEW: Initial Zoom out setting
+            center: siteOrigin, zoom: 17.8, pitch: 45, bearing: 70.99999999999989, antialias: true
         });
 
         let modelTransform = getTransformMatrix(siteOrigin);
@@ -1033,7 +1067,7 @@
                         scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
                     }
 
-                    // INVERT SCALE FOR EAST FACING HERO PLOTS (e.g., East facing orientation)
+                    // INVERT SCALE FOR EAST FACING HERO PLOTS
                     if (dbData.facing === "East") {
                         scaleX = -scaleX;
                     }
@@ -1059,7 +1093,6 @@
                 }
 
                 updatePlotColorsFromDB();
-
                 map.setPaintProperty('esri-satellite-layer', 'raster-opacity', 0.25);
 
                 const rotYVal = THREE.MathUtils.degToRad(parseFloat(savedConfig.rotY));
@@ -1101,6 +1134,7 @@
 
             const ownerRow = document.getElementById('ownerMetaRow');
             const ownerBadge = document.getElementById('badgePlotOwner');
+            const pDateRow = document.getElementById('purchaseDateRow');
 
             if (isSalesPerson && plotData.status !== 'AVAILABLE' && plotData.owner && plotData.owner !== 'Unassigned') {
                 document.getElementById('plotOwner').innerText = plotData.owner;
@@ -1110,6 +1144,14 @@
             } else {
                 ownerRow.style.display = 'none';
                 ownerBadge.style.display = 'none';
+            }
+            
+            // NEW: Show Purchase Date if SOLD
+            if (plotData.status === 'SOLD' && plotData.purchase_date) {
+                document.getElementById('plotPurchaseDate').innerText = plotData.purchase_date;
+                pDateRow.style.display = 'flex';
+            } else {
+                pDateRow.style.display = 'none';
             }
 
             document.getElementById('badgePlotTitle').innerText = `Plot ${plotNum}`;
@@ -1176,6 +1218,8 @@
 
             const requiresOtp = (newStatus === 'SOLD') || (currentPlot.status === 'SOLD' && newStatus === 'AVAILABLE');
             if (requiresOtp) {
+                // Update CEO number display in modal before opening
+                document.getElementById('otpCeoDisplayNumber').innerText = ceoMobileNumber;
                 const otpInput = document.getElementById('otpInput');
                 otpInput.value = '';
                 document.getElementById('otpModal').style.display = 'flex';
@@ -1209,12 +1253,16 @@
             };
 
             const applyLocalFallback = () => {
+                // Get current date string for purchase log
+                const currentDateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                
                 plotDatabase[plotId] = {
                     ...plotDatabase[plotId],
                     status: newStatus,
                     owner: newStatus === 'AVAILABLE' ? 'Unassigned' : (buyerName || 'Reserved'),
                     buyer_mobile: newStatus === 'SOLD' ? buyerMobile : '',
-                    reserved_by_id: newStatus === 'RESERVED' ? currentUser.username : (plotDatabase[plotId].reserved_by_id || '')
+                    reserved_by_id: newStatus === 'RESERVED' ? currentUser.username : (plotDatabase[plotId].reserved_by_id || ''),
+                    purchase_date: newStatus === 'SOLD' ? currentDateStr : (plotDatabase[plotId].purchase_date || '')
                 };
                 localStorage.setItem('neopolis_plot_db', JSON.stringify(plotDatabase));
                 
@@ -1359,6 +1407,7 @@
 
                 if (currentUser.role === 'admin') {
                     document.getElementById('adminPanelBtn').style.display = 'block';
+                    document.getElementById('adminCeoNumber').value = ceoMobileNumber;
                 } else {
                     document.getElementById('adminPanelBtn').style.display = 'none';
                 }
@@ -1371,6 +1420,16 @@
                 document.getElementById('userSessionBox').style.display = 'none';
                 document.getElementById('changePassBox').style.display = 'none';
                 document.getElementById('adminCreateUserBox').style.display = 'none';
+            }
+        }
+        
+        // NEW: Admin CEO Number Save Function
+        function saveCeoNumber() {
+            const num = document.getElementById('adminCeoNumber').value.trim();
+            if(num) {
+                ceoMobileNumber = num;
+                localStorage.setItem('neopolis_ceo_mobile', num);
+                alert("CEO Mobile Number updated successfully!");
             }
         }
 
@@ -1467,7 +1526,9 @@
 
             updatePlotColorsFromDB();
             map.setPaintProperty('esri-satellite-layer', 'raster-opacity', 1.0);
-            map.flyTo({ center: siteOrigin, zoom: 19.14515149676595, pitch: 60, bearing: 70.99999999999989, duration: 1200 });
+            
+            // ZOOM OUT RESET
+            map.flyTo({ center: siteOrigin, zoom: 17.8, pitch: 45, bearing: 70.99999999999989, duration: 1200 });
         }
 
         function updateDimensionCallouts() {
