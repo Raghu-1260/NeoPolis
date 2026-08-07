@@ -8,48 +8,50 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Serverless Connection Caching Singleton
-let cachedDb = null;
+// Singleton MongoDB Connection Helper
+let cachedClient = null;
 
-async function connectToDatabase() {
-    if (cachedDb) return cachedDb;
-    if (!process.env.MONGODB_URI) throw new Error("MONGODB_URI environment variable missing!");
+async function getDatabase() {
+    if (cachedClient && cachedClient.topology && cachedClient.topology.isConnected()) {
+        return cachedClient.db('neopolis');
+    }
 
-    const client = await MongoClient.connect(process.env.MONGODB_URI);
-    const db = client.db('neopolis');
-    cachedDb = db;
-    return db;
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+        throw new Error("MONGODB_URI environment variable is missing on Vercel!");
+    }
+
+    const client = new MongoClient(uri);
+    await client.connect();
+    cachedClient = client;
+    return client.db('neopolis');
 }
 
-// ==========================================
-// 1. SECURITY & ATTACK LOGGING ENGINE
-// ==========================================
-async function logSecurityAttack(db, type, req, details = '') {
+// Security Attack Logger
+async function logSecurityAttack(type, req, details = '') {
     try {
+        const db = await getDatabase();
         const attackLogs = db.collection('security_attack_logs');
-        const entry = {
+        await attackLogs.insertOne({
             timestamp: new Date(),
             type: type,
             ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown',
             userAgent: req.headers['user-agent'] || 'Unknown',
             path: req.originalUrl,
             details: details
-        };
-        await attackLogs.insertOne(entry);
-        console.error(`🚨 SECURITY ATTACK DETECTED [${type}]:`, entry);
+        });
     } catch (err) {
-        console.error("Failed to record attack log:", err);
+        console.error("Failed to write attack log:", err.message);
     }
 }
 
-// Anti-Brute-Force Rate Limiting (100 Requests per 15 Min Window)
+// Anti-Brute-Force Rate Limiting
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
     handler: async (req, res) => {
-        const db = await connectToDatabase();
-        await logSecurityAttack(db, 'RATE_LIMIT_EXCEEDED', req, 'Exceeded 100 requests in 15 mins');
-        res.status(429).json({ success: false, message: 'Too many requests. Attack activity logged.' });
+        await logSecurityAttack('RATE_LIMIT_EXCEEDED', req, 'Exceeded 100 requests in 15 mins');
+        res.status(429).json({ success: false, message: 'Too many requests.' });
     }
 });
 
@@ -62,22 +64,21 @@ app.use(async (req, res, next) => {
     
     for (let pattern of suspiciousPatterns) {
         if (pattern.test(payload)) {
-            const db = await connectToDatabase();
-            await logSecurityAttack(db, 'INJECTION_ATTEMPT', req, `Blocked Payload: ${payload}`);
-            return res.status(400).json({ success: false, message: 'Malicious payload blocked and logged.' });
+            await logSecurityAttack('INJECTION_ATTEMPT', req, `Blocked Payload: ${payload}`);
+            return res.status(400).json({ success: false, message: 'Malicious payload blocked.' });
         }
     }
     next();
 });
 
 // ==========================================
-// 2. PLOT PURCHASES & CEO OTP APIS
+// API ENDPOINTS
 // ==========================================
 
-// GET Route: Fetch Plots from MongoDB
+// GET: Fetch Plots
 app.get('/api/plots', async (req, res) => {
     try {
-        const db = await connectToDatabase();
+        const db = await getDatabase();
         const plotsCollection = db.collection('plots');
         const plotsArray = await plotsCollection.find({}).toArray();
         
@@ -86,38 +87,16 @@ app.get('/api/plots', async (req, res) => {
 
         res.json({ success: true, plots: plotsMap });
     } catch (err) {
+        console.error("GET /api/plots Error:", err.message);
         res.status(500).json({ success: false, message: err.message });
     }
 });
 
-// POST Route: Dispatch CEO Security OTP
-app.post('/api/send-ceo-otp', async (req, res) => {
-    const { ceoPhone } = req.body;
-    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    try {
-        if (process.env.TWILIO_SID && process.env.TWILIO_AUTH) {
-            const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
-            await client.messages.create({
-                body: `[NeoPolis Springs] CEO Security Code: ${generatedOtp}. Do not share this code.`,
-                from: process.env.TWILIO_PHONE,
-                to: ceoPhone
-            });
-        }
-        res.json({ success: true, message: 'OTP dispatched to CEO.' });
-    } catch (err) {
-        const db = await connectToDatabase();
-        await logSecurityAttack(db, 'SMS_GATEWAY_ERROR', req, err.message);
-        res.status(500).json({ success: false, message: 'SMS Gateway Delivery Failed.' });
-    }
-});
-
-// POST Route: Update Plot Status & Save to MongoDB
+// POST: Update Plot & Verify CEO OTP
 app.post('/api/plots/update', async (req, res) => {
     try {
         const { plotId, newStatus, buyerName, buyerMobile, user, otp } = req.body;
 
-        // Convert OTP to string & trim spaces to prevent type mismatch bugs
         const providedOtp = otp ? String(otp).trim() : '';
 
         if (newStatus === 'SOLD' && providedOtp !== '849201') {
@@ -142,6 +121,20 @@ app.post('/api/plots/update', async (req, res) => {
         const plotsCollection = db.collection('plots');
         await plotsCollection.updateOne({ plotId: String(plotId) }, { $set: updatedData }, { upsert: true });
 
+        // Optional SMS Dispatch
+        if (newStatus === 'SOLD' && buyerMobile && process.env.TWILIO_SID) {
+            try {
+                const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
+                await client.messages.create({
+                    body: `Dear ${buyerName}, Booking for Plot No. ${plotId} at NeoPolis Springs is confirmed on ${purchaseDate}. Thank you!`,
+                    from: process.env.TWILIO_PHONE,
+                    to: `+91${buyerMobile}`
+                });
+            } catch (smsErr) {
+                console.warn("SMS Error:", smsErr.message);
+            }
+        }
+
         res.json({
             success: true,
             message: `Plot ${plotId} status updated to ${newStatus}.`,
@@ -149,20 +142,17 @@ app.post('/api/plots/update', async (req, res) => {
         });
     } catch (err) {
         console.error("POST /api/plots/update Error:", err.message);
-        res.status(500).json({ success: false, error: err.message });
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 
-// ==========================================
-// 3. AUTOMATED BACKUP CRON ENDPOINT
-// ==========================================
+// GET: Cron Daily Backup
 app.get('/api/cron/backup', async (req, res) => {
     try {
-        const db = await connectToDatabase();
+        const db = await getDatabase();
         const plotsCollection = db.collection('plots');
         const allPlots = await plotsCollection.find({}).toArray();
 
-        // Create an automated daily backup snapshot document in MongoDB
         const backupArchive = db.collection('database_daily_backups');
         await backupArchive.insertOne({
             backup_date: new Date(),
@@ -171,19 +161,16 @@ app.get('/api/cron/backup', async (req, res) => {
             data_snapshot: allPlots
         });
 
-        console.log(`📦 Automated Backup Executed Successfully: ${allPlots.length} records archived.`);
         res.json({ success: true, message: 'Automated Daily Backup Complete', timestamp: new Date() });
-    // Change the error response at the bottom of POST /api/plots/update:
     } catch (err) {
-        console.error("POST /api/plots/update Error:", err.message);
-        res.status(500).json({ success: false, message: err.message || "Internal Server Error" });
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 
-// GET Route: Admin Security Logs Viewer
+// GET: Admin Logs
 app.get('/api/admin/security-logs', async (req, res) => {
     try {
-        const db = await connectToDatabase();
+        const db = await getDatabase();
         const logs = await db.collection('security_attack_logs').find({}).sort({ timestamp: -1 }).limit(100).toArray();
         res.json({ success: true, logs: logs });
     } catch (err) {
