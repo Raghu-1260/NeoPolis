@@ -1,0 +1,16 @@
+{
+  "name": "neopolis-app",
+  "version": "1.0.0",
+  "description": "NeoPolis Springs Full-Stack Platform",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.3.1",
+    "mongodb": "^6.8.0",
+    "twilio": "^5.2.0"
+  }
+}

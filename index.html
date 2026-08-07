@@ -774,18 +774,18 @@
         }
 
         async function fetchPlotsFromBackend() {
-            try {
-                const res = await fetch('http://localhost:5000/api/plots');
-                const data = await res.json();
-                if (data.success) {
-                    plotDatabase = { ...plotDatabase, ...data.plots };
-                    updatePlotColorsFromDB();
-                    if (selectedPlotNum) updatePlotUI(selectedPlotNum);
-                }
-            } catch (err) {
-                console.warn("Backend server off. Operating on local memory state.");
-            }
+    try {
+        const res = await fetch('/api/plots');
+        const data = await res.json();
+        if (data.success) {
+            plotDatabase = { ...plotDatabase, ...data.plots };
+            updatePlotColorsFromDB();
+            if (selectedPlotNum) updatePlotUI(selectedPlotNum);
         }
+    } catch (err) {
+        console.warn("Operating on local state fallback.");
+    }
+}
 
         const map = new maplibregl.Map({
             container: 'map',
@@ -1240,71 +1240,43 @@
         }
 
         async function executeFinalSavePayload(otpCode) {
-            if (!pendingSavePayload) return;
-            const { plotId, newStatus, buyerName, buyerMobile } = pendingSavePayload;
+    if (!pendingSavePayload) return;
+    const { plotId, newStatus, buyerName, buyerMobile } = pendingSavePayload;
 
-            const payload = {
-                plotId: plotId,
-                newStatus: newStatus,
-                buyerName: buyerName,
-                buyerMobile: buyerMobile,
-                user: { id: currentUser.username, displayName: currentUser.username, role: currentUser.role },
-                otp: otpCode
-            };
+    const payload = {
+        plotId: plotId,
+        newStatus: newStatus,
+        buyerName: buyerName,
+        buyerMobile: buyerMobile,
+        user: { id: currentUser.username, displayName: currentUser.username, role: currentUser.role },
+        otp: otpCode
+    };
 
-            const applyLocalFallback = () => {
-                // Get current date string for purchase log
-                const currentDateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-                
-                plotDatabase[plotId] = {
-                    ...plotDatabase[plotId],
-                    status: newStatus,
-                    owner: newStatus === 'AVAILABLE' ? 'Unassigned' : (buyerName || 'Reserved'),
-                    buyer_mobile: newStatus === 'SOLD' ? buyerMobile : '',
-                    reserved_by_id: newStatus === 'RESERVED' ? currentUser.username : (plotDatabase[plotId].reserved_by_id || ''),
-                    purchase_date: newStatus === 'SOLD' ? currentDateStr : (plotDatabase[plotId].purchase_date || '')
-                };
-                localStorage.setItem('neopolis_plot_db', JSON.stringify(plotDatabase));
-                
-                updatePlotColorsFromDB();
-                updatePlotUI(plotId);
-                
-                // NEW: Automatically close panel and return to home view after 0.5 seconds
-                setTimeout(() => { resetToOverview(); }, 500); 
-            };
+    try {
+        const response = await fetch('/api/plots/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 1500);
+        const result = await response.json();
 
-                const response = await fetch('http://localhost:5000/api/plots/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    signal: controller.signal
-                });
-
-                clearTimeout(timeoutId);
-                const result = await response.json();
-
-                if (result.success) {
-                    plotDatabase[plotId] = { ...plotDatabase[plotId], ...result.updatedPlot, owner: result.updatedPlot.buyer_name || 'Reserved' };
-                    localStorage.setItem('neopolis_plot_db', JSON.stringify(plotDatabase));
-                    updatePlotColorsFromDB();
-                    updatePlotUI(plotId);
-                    alert(result.message);
-                    resetToOverview(); // NEW: Return to home
-                } else {
-                    alert(`Server Security Error: ${result.message}`);
-                }
-            } catch (err) {
-                console.warn("Node backend unreachable. Applying client-side update...", err);
-                applyLocalFallback();
-                alert(`Plot ${plotId} status updated to ${newStatus}`);
-            } finally {
-                pendingSavePayload = null;
-            }
+        if (result.success) {
+            plotDatabase[plotId] = { ...plotDatabase[plotId], ...result.updatedPlot, owner: result.updatedPlot.buyer_name || 'Reserved' };
+            localStorage.setItem('neopolis_plot_db', JSON.stringify(plotDatabase));
+            updatePlotColorsFromDB();
+            updatePlotUI(plotId);
+            alert(result.message);
+            resetToOverview();
+        } else {
+            alert(`Security Error: ${result.message}`);
         }
+    } catch (err) {
+        alert("Server communication error.");
+    } finally {
+        pendingSavePayload = null;
+    }
+}
 
         // COLOR ENGINE: USES MESH BASIC MATERIAL EMISSIVE OVERLAYS FOR 100% VIVID SOLID COLORS WITH STATUS PLOTS DIMMING
         function updatePlotColorsFromDB() {
