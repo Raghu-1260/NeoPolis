@@ -1221,45 +1221,47 @@
         }
 
         async function executeFinalSavePayload(otpCode) {
-            if (!pendingSavePayload) return;
-            const { plotId, newStatus, buyerName, buyerMobile } = pendingSavePayload;
+    if (!pendingSavePayload) return;
+    const { plotId, newStatus, buyerName, buyerMobile } = pendingSavePayload;
 
-            const payload = {
-                plotId: String(plotId),
-                newStatus: newStatus,
-                buyerName: buyerName,
-                buyerMobile: buyerMobile,
-                user: { id: currentUser ? currentUser.username : 'admin', role: currentUser ? currentUser.role : 'admin' },
-                otp: otpCode
-            };
+    const payload = {
+        plotId: String(plotId),
+        newStatus: newStatus,
+        buyerName: buyerName,
+        buyerMobile: buyerMobile,
+        user: { id: currentUser ? currentUser.username : 'admin', role: currentUser ? currentUser.role : 'admin' },
+        otp: otpCode ? String(otpCode).trim() : ''
+    };
 
-            try {
-                const response = await fetch('/api/plots/update', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+    try {
+        const response = await fetch('/api/plots/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-                const result = await response.json();
+        const result = await response.json();
 
-                if (result.success) {
-                    if (!plotDatabase[plotId]) plotDatabase[plotId] = {};
-                    Object.assign(plotDatabase[plotId], result.updatedPlot);
-                    localStorage.setItem('neopolis_plot_db', JSON.stringify(plotDatabase));
+        if (response.ok && result.success) {
+            if (!plotDatabase[plotId]) plotDatabase[plotId] = {};
+            Object.assign(plotDatabase[plotId], result.updatedPlot);
+            localStorage.setItem('neopolis_plot_db', JSON.stringify(plotDatabase));
 
-                    updatePlotColorsFromDB();
-                    updatePlotUI(plotId);
-                    alert(result.message);
-                    resetToOverview();
-                } else {
-                    alert(`Security Verification Error: ${result.message}`);
-                }
-            } catch (err) {
-                alert("Server communication error. Check console for details.");
-            } finally {
-                pendingSavePayload = null;
-            }
+            updatePlotColorsFromDB();
+            updatePlotUI(plotId);
+            alert(result.message || `Plot ${plotId} updated successfully!`);
+            resetToOverview();
+        } else {
+            const errorMsg = result.message || result.error || "Invalid OTP code or unauthorized request.";
+            alert(`Security Verification Error: ${errorMsg}`);
         }
+    } catch (err) {
+        console.error("Save payload error:", err);
+        alert("Server communication error. Please check your connection or server logs.");
+    } finally {
+        pendingSavePayload = null;
+    }
+}
 
         function updatePlotColorsFromDB() {
             const showColors = document.getElementById('availabilityToggle').checked;

@@ -173,9 +173,10 @@ app.get('/api/cron/backup', async (req, res) => {
 
         console.log(`📦 Automated Backup Executed Successfully: ${allPlots.length} records archived.`);
         res.json({ success: true, message: 'Automated Daily Backup Complete', timestamp: new Date() });
+    // Change the error response at the bottom of POST /api/plots/update:
     } catch (err) {
-        console.error("Backup execution error:", err.message);
-        res.status(500).json({ success: false, error: err.message });
+        console.error("POST /api/plots/update Error:", err.message);
+        res.status(500).json({ success: false, message: err.message || "Internal Server Error" });
     }
 });
 
