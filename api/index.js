@@ -114,51 +114,43 @@ app.post('/api/send-ceo-otp', async (req, res) => {
 
 // POST Route: Update Plot Status & Save to MongoDB
 app.post('/api/plots/update', async (req, res) => {
-    const { plotId, newStatus, buyerName, buyerMobile, user, otp } = req.body;
-    const db = await connectToDatabase();
+    try {
+        const { plotId, newStatus, buyerName, buyerMobile, user, otp } = req.body;
 
-    // Verify CEO OTP Code
-    if (newStatus === 'SOLD' && otp !== '849201') {
-        await logSecurityAttack(db, 'INVALID_CEO_OTP', req, `Plot: ${plotId}, User: ${user ? user.id : 'Unknown'}`);
-        return res.status(401).json({ success: false, message: 'Invalid CEO Security OTP Code!' });
-    }
+        // Convert OTP to string & trim spaces to prevent type mismatch bugs
+        const providedOtp = otp ? String(otp).trim() : '';
 
-    const purchaseDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-
-    const updatedData = {
-        plotId: plotId,
-        status: newStatus,
-        owner: newStatus === 'AVAILABLE' ? 'Unassigned' : (buyerName || 'Reserved'),
-        buyer_name: buyerName,
-        buyer_mobile: buyerMobile,
-        purchase_date: newStatus === 'SOLD' ? purchaseDate : '',
-        updated_by: user ? user.id : 'system',
-        updated_at: new Date()
-    };
-
-    // Save permanently to MongoDB Atlas
-    const plotsCollection = db.collection('plots');
-    await plotsCollection.updateOne({ plotId: plotId }, { $set: updatedData }, { upsert: true });
-
-    // Send Buyer Confirmation Receipt via SMS
-    if (newStatus === 'SOLD' && buyerMobile && process.env.TWILIO_SID) {
-        try {
-            const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
-            await client.messages.create({
-                body: `Dear ${buyerName}, Booking for Plot No. ${plotId} at NeoPolis Springs is confirmed on ${purchaseDate}. Thank you for choosing Avenue Real Estate!`,
-                from: process.env.TWILIO_PHONE,
-                to: `+91${buyerMobile}`
-            });
-        } catch (smsErr) {
-            console.warn("SMS receipt dispatch warning:", smsErr.message);
+        if (newStatus === 'SOLD' && providedOtp !== '849201') {
+            await logSecurityAttack('INVALID_CEO_OTP', req, `Plot: ${plotId}`);
+            return res.status(401).json({ success: false, message: 'Invalid CEO Security OTP Code!' });
         }
-    }
 
-    res.json({
-        success: true,
-        message: `Plot ${plotId} status updated to ${newStatus}.`,
-        updatedPlot: updatedData
-    });
+        const db = await getDatabase();
+        const purchaseDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        const updatedData = {
+            plotId: String(plotId),
+            status: newStatus,
+            owner: newStatus === 'AVAILABLE' ? 'Unassigned' : (buyerName || 'Reserved'),
+            buyer_name: buyerName || '',
+            buyer_mobile: buyerMobile || '',
+            purchase_date: newStatus === 'SOLD' ? purchaseDate : '',
+            updated_by: user ? user.id : 'admin',
+            updated_at: new Date()
+        };
+
+        const plotsCollection = db.collection('plots');
+        await plotsCollection.updateOne({ plotId: String(plotId) }, { $set: updatedData }, { upsert: true });
+
+        res.json({
+            success: true,
+            message: `Plot ${plotId} status updated to ${newStatus}.`,
+            updatedPlot: updatedData
+        });
+    } catch (err) {
+        console.error("POST /api/plots/update Error:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
 });
 
 // ==========================================

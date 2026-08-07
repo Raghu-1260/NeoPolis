@@ -410,7 +410,6 @@
         <div class="widget-pill glass-card">
             <div class="widget-item"><span id="roleBadge" class="btn-role-badge">CUSTOMER VIEW</span></div>
             <div class="widget-item"><span id="timeIcon">☀️</span> <strong id="timeModeText">DAY MODE</strong></div>
-            <!-- Dynamic Date ID added here -->
             <div class="widget-item">📅 <strong id="currentDateDisplay">Loading...</strong></div>
         </div>
 
@@ -444,7 +443,6 @@
                     <div id="adminPanelBtn" style="display:none;">
                         <button class="btn-panel btn-gold" style="margin-top:6px;" onclick="showAdminUserModal()">➕ CREATE USER</button>
                         
-                        <!-- NEW: Admin Exclusive CEO Number Settings -->
                         <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
                             <label style="font-size: 0.65rem; color: #a0aec0; font-weight: 700;">CEO MOBILE (ADMIN ONLY)</label>
                             <div style="display: flex; gap: 5px; margin-top: 4px;">
@@ -506,7 +504,6 @@
             <input type="text" id="searchInput" class="search-input" value="1" placeholder="Enter Plot No. (e.g. 1, 4, 72, 89, 116)" onkeyup="handleSearch(event)">
         </div>
 
-        <!-- NEW: Toggled OFF by default -->
         <div class="toggle-row">
             <label>SHOW PLOT AVAILABILITY COLORS</label>
             <label class="switch">
@@ -533,7 +530,6 @@
             <div class="meta-row"><span class="meta-lbl">📐 AREA</span><span class="meta-val" id="plotArea">251 Sq.Yds</span></div>
             <div class="meta-row"><span class="meta-lbl">📏 DIMENSION</span><span class="meta-val" id="plotDim">34.7' x 65.0'</span></div>
             <div class="meta-row"><span class="meta-lbl">🧭 FACING</span><span class="meta-val" id="plotFacing">North</span></div>
-            <!-- NEW: Purchase Date Row -->
             <div class="meta-row" id="purchaseDateRow" style="display:none;"><span class="meta-lbl">🗓️ PURCHASED ON</span><span class="meta-val" id="plotPurchaseDate">-</span></div>
             <div class="meta-row" id="ownerMetaRow" style="display:none;"><span class="meta-lbl">👤 OWNER / HOLD</span><span class="meta-val" id="plotOwner">Unassigned</span></div>
         </div>
@@ -587,7 +583,6 @@
             ORBIT
         </button>
         
-        <!-- NEW GOOGLE MAPS BUTTON -->
         <button class="tool-icon-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=16.470777198842512,80.75431545841093', '_blank')">
             <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
             MAPS
@@ -666,7 +661,6 @@
         let currentUser = JSON.parse(sessionStorage.getItem('neopolis_user')) || null;
         let isSalesPerson = currentUser && (currentUser.role === 'sales' || currentUser.role === 'admin');
         
-        // NEW: Load Admin CEO Number
         let ceoMobileNumber = localStorage.getItem('neopolis_ceo_mobile') || "98XXX XXXX";
 
         const HARDCODED_CONFIG = {
@@ -708,7 +702,6 @@
             "89": { dim: "30.0' x 55.0'", area: "183", facing: "East", status: "SOLD", owner: "Rams", reserved_by_id: "sales", purchase_date: "05 Aug 2026" }
         };
 
-        // Initialize default sizes explicitly
         for (let i = 1; i <= 121; i++) {
             const key = String(i);
             if (!plotDatabase[key]) {
@@ -736,7 +729,6 @@
             }
         }
         
-        // NEW: Dynamic Live Clock Function
         function updateDynamicDate() {
             const options = { day: '2-digit', month: 'short', year: 'numeric' };
             const today = new Date();
@@ -774,18 +766,18 @@
         }
 
         async function fetchPlotsFromBackend() {
-    try {
-        const res = await fetch('/api/plots');
-        const data = await res.json();
-        if (data.success) {
-            plotDatabase = { ...plotDatabase, ...data.plots };
-            updatePlotColorsFromDB();
-            if (selectedPlotNum) updatePlotUI(selectedPlotNum);
+            try {
+                const res = await fetch('/api/plots');
+                const data = await res.json();
+                if (data.success) {
+                    plotDatabase = { ...plotDatabase, ...data.plots };
+                    updatePlotColorsFromDB();
+                    if (selectedPlotNum) updatePlotUI(selectedPlotNum);
+                }
+            } catch (err) {
+                console.warn("Operating on local state fallback.");
+            }
         }
-    } catch (err) {
-        console.warn("Operating on local state fallback.");
-    }
-}
 
         const map = new maplibregl.Map({
             container: 'map',
@@ -809,7 +801,6 @@
                     { id: 'carto-hybrid-labels', type: 'raster', source: 'carto-labels', layout: { 'visibility': 'visible' } }
                 ]
             },
-            // EXACT EXTRACTED CAMERA COORDINATES
             center: [80.7538896607399, 16.470833069059623], zoom: 18.102824376136326, pitch: 60, bearing: 74.19999999999958, antialias: true
         });
 
@@ -1025,12 +1016,10 @@
             resetToOverview();
         });
 
-        // ACCURATE CENTERED FLY-TO ENGINE FOR EDGE PLOTS WITH MASTERPLAN DIMMING
         function focusSelectedPlot(num) {
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
             selectedPlotNum = query;
             
-            // Automatically expand the panel to exactly 50% max-height when a plot is selected
             const infoPanel = document.getElementById('infoPanel');
             if (infoPanel) {
                 infoPanel.classList.remove('collapsed');
@@ -1067,7 +1056,6 @@
                         scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
                     }
 
-                    // INVERT SCALE FOR EAST FACING HERO PLOTS
                     if (dbData.facing === "East") {
                         scaleX = -scaleX;
                     }
@@ -1146,7 +1134,6 @@
                 ownerBadge.style.display = 'none';
             }
             
-            // NEW: Show Purchase Date if SOLD
             if (plotData.status === 'SOLD' && plotData.purchase_date) {
                 document.getElementById('plotPurchaseDate').innerText = plotData.purchase_date;
                 pDateRow.style.display = 'flex';
@@ -1157,11 +1144,10 @@
             document.getElementById('badgePlotTitle').innerText = `Plot ${plotNum}`;
             document.getElementById('badgePlotArea').innerText = `${plotData.area} Sq.Yds`;
             
-            // Dynamic generation of Status in the floating 3D hero plot badge
             const badgeStatusEl = document.getElementById('badgePlotStatus');
             if (badgeStatusEl) {
                 badgeStatusEl.innerText = plotData.status;
-                let bgColor = '#22c55e'; // AVAILABLE
+                let bgColor = '#22c55e';
                 let textColor = '#ffffff';
                 if (plotData.status === 'SOLD') { bgColor = '#ff0033'; }
                 else if (plotData.status === 'RESERVED') { bgColor = '#ffea00'; textColor = '#000000'; }
@@ -1218,67 +1204,63 @@
 
             const requiresOtp = (newStatus === 'SOLD') || (currentPlot.status === 'SOLD' && newStatus === 'AVAILABLE');
             if (requiresOtp) {
-                // Update CEO number display in modal before opening
                 document.getElementById('otpCeoDisplayNumber').innerText = ceoMobileNumber;
                 const otpInput = document.getElementById('otpInput');
                 otpInput.value = '';
                 document.getElementById('otpModal').style.display = 'flex';
                 setTimeout(() => otpInput.focus(), 50);
             } else {
-                executeFinalSavePayload('');
+                submitFinalOtpSave('');
             }
         }
 
         function submitFinalOtpSave() {
-            const inputOtp = document.getElementById('otpInput').value.trim();
-            if (inputOtp !== "849201") {
-                alert("Invalid CEO Authorization OTP! Enter code: 849201");
-                return;
-            }
+            const inputOtp = document.getElementById('otpInput').value ? document.getElementById('otpInput').value.trim() : '';
             closeModal('otpModal');
             executeFinalSavePayload(inputOtp);
         }
 
         async function executeFinalSavePayload(otpCode) {
-    if (!pendingSavePayload) return;
-    const { plotId, newStatus, buyerName, buyerMobile } = pendingSavePayload;
+            if (!pendingSavePayload) return;
+            const { plotId, newStatus, buyerName, buyerMobile } = pendingSavePayload;
 
-    const payload = {
-        plotId: plotId,
-        newStatus: newStatus,
-        buyerName: buyerName,
-        buyerMobile: buyerMobile,
-        user: { id: currentUser.username, displayName: currentUser.username, role: currentUser.role },
-        otp: otpCode
-    };
+            const payload = {
+                plotId: String(plotId),
+                newStatus: newStatus,
+                buyerName: buyerName,
+                buyerMobile: buyerMobile,
+                user: { id: currentUser ? currentUser.username : 'admin', role: currentUser ? currentUser.role : 'admin' },
+                otp: otpCode
+            };
 
-    try {
-        const response = await fetch('/api/plots/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+            try {
+                const response = await fetch('/api/plots/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-        const result = await response.json();
+                const result = await response.json();
 
-        if (result.success) {
-            plotDatabase[plotId] = { ...plotDatabase[plotId], ...result.updatedPlot, owner: result.updatedPlot.buyer_name || 'Reserved' };
-            localStorage.setItem('neopolis_plot_db', JSON.stringify(plotDatabase));
-            updatePlotColorsFromDB();
-            updatePlotUI(plotId);
-            alert(result.message);
-            resetToOverview();
-        } else {
-            alert(`Security Error: ${result.message}`);
+                if (result.success) {
+                    if (!plotDatabase[plotId]) plotDatabase[plotId] = {};
+                    Object.assign(plotDatabase[plotId], result.updatedPlot);
+                    localStorage.setItem('neopolis_plot_db', JSON.stringify(plotDatabase));
+
+                    updatePlotColorsFromDB();
+                    updatePlotUI(plotId);
+                    alert(result.message);
+                    resetToOverview();
+                } else {
+                    alert(`Security Verification Error: ${result.message}`);
+                }
+            } catch (err) {
+                alert("Server communication error. Check console for details.");
+            } finally {
+                pendingSavePayload = null;
+            }
         }
-    } catch (err) {
-        alert("Server communication error.");
-    } finally {
-        pendingSavePayload = null;
-    }
-}
 
-        // COLOR ENGINE: USES MESH BASIC MATERIAL EMISSIVE OVERLAYS FOR 100% VIVID SOLID COLORS WITH STATUS PLOTS DIMMING
         function updatePlotColorsFromDB() {
             const showColors = document.getElementById('availabilityToggle').checked;
 
@@ -1303,7 +1285,7 @@
 
                         const mat = new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide });
                         if (selectedPlotNum && plotNum !== selectedPlotNum) {
-                            mat.color.multiplyScalar(0.5); // Dim all remaining unselected plots (including status plots)
+                            mat.color.multiplyScalar(0.5);
                         }
                         mesh.material = mat;
                     } else {
@@ -1317,7 +1299,6 @@
                 }
             });
 
-            // Master plan base ground and road meshes dim slightly when a plot is selected
             if (loadedModel) {
                 loadedModel.traverse((child) => {
                     if (child.isMesh && !plotMeshes[child.name.trim()]) {
@@ -1394,8 +1375,7 @@
                 document.getElementById('adminCreateUserBox').style.display = 'none';
             }
         }
-        
-        // NEW: Admin CEO Number Save Function
+
         function saveCeoNumber() {
             const num = document.getElementById('adminCeoNumber').value.trim();
             if(num) {
@@ -1488,7 +1468,6 @@
             document.getElementById('dimSideB').style.display = 'none';
             document.getElementById('heroPlotBadge').style.display = 'none';
             
-            // Automatically collapse panel when closing plot
             const infoPanel = document.getElementById('infoPanel');
             if (infoPanel) {
                 infoPanel.classList.add('collapsed');
@@ -1499,7 +1478,6 @@
             updatePlotColorsFromDB();
             map.setPaintProperty('esri-satellite-layer', 'raster-opacity', 1.0);
             
-            // EXACT EXTRACTED RESET FLY-TO
             map.flyTo({ 
                 center: [80.7538896607399, 16.470833069059623], 
                 zoom: 18.102824376136326, 
@@ -1685,15 +1663,11 @@
 
         function handleSearch(e) { if (e.key === 'Enter') focusSelectedPlot(); }
 
-        // ==========================================
-        // DRAGGABLE FLOATING TOOLBAR LOGIC
-        // ==========================================
         const dragToolbar = document.getElementById('rightToolbar');
         let isDraggingToolbar = false;
         let tStartX, tStartY, tStartTop, tStartLeft;
 
         dragToolbar.addEventListener('pointerdown', function(e) {
-            // Do not trigger drag if the user is clicking a specific tool icon
             if(e.target.closest('button') && e.target.id !== 'rightToolbarToggleBtn') return;
 
             isDraggingToolbar = true;
@@ -1704,21 +1678,18 @@
             tStartTop = rect.top;
             tStartLeft = rect.left;
             
-            // Turn off CSS transitions temporarily so the drag is instantly smooth
             dragToolbar.style.transition = 'none'; 
             
-            // Switch from "right" positioning to "left/top" absolute coordinates
             dragToolbar.style.right = 'auto'; 
             dragToolbar.style.left = tStartLeft + 'px';
             dragToolbar.style.top = tStartTop + 'px';
             
-            // Capture the pointer so it doesn't lose track if you drag fast
             dragToolbar.setPointerCapture(e.pointerId);
         });
 
         dragToolbar.addEventListener('pointermove', function(e) {
             if (!isDraggingToolbar) return;
-            e.preventDefault(); // Prevents the screen from scrolling while dragging
+            e.preventDefault(); 
             
             const dx = e.clientX - tStartX;
             const dy = e.clientY - tStartY;
@@ -1731,7 +1702,6 @@
             if (!isDraggingToolbar) return;
             isDraggingToolbar = false;
             
-            // Turn the smooth expand/collapse transitions back on
             dragToolbar.style.transition = 'max-height 0.3s ease, padding 0.3s ease';
             dragToolbar.releasePointerCapture(e.pointerId);
         });
