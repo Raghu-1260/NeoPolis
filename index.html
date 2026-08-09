@@ -702,17 +702,41 @@
             "sales": { pass: "sales123", role: "sales" }
         };
 
-        let defaultGallery = [
-            { id: 1, title: "Park Layout Plan", src: "assets/images/gallery/park_plan.jpg" },
-            { id: 2, title: "Project Entrance View", src: "assets/images/Logo.png" },
-            { id: 3, title: "Cricket Pitch & Sports Zone", src: "assets/images/gallery/cricket_pitch.jpg" },
-            { id: 4, title: "Open Amphitheater", src: "assets/images/gallery/amphitheater.jpg" },
-            { id: 5, title: "Children's Play Park", src: "assets/images/gallery/play_area.jpg" },
-            { id: 6, title: "Gazebo & Water Fountain", src: "assets/images/gallery/gazebo.jpg" }
-        ];
+        // -------------------------------------------------------------
+// GALLERY CONFIGURATION (Local Directory: assets/images/gallery/)
+// -------------------------------------------------------------
 
-        let galleryImages = JSON.parse(localStorage.getItem('neopolis_gallery_images')) || defaultGallery;
+// Default gallery initialized completely empty (all stock shots and Avenue logo fallbacks removed)
+let defaultGallery = [];
 
+// Load uploaded images from LocalStorage or default to empty array
+let galleryImages = JSON.parse(localStorage.getItem('neopolis_gallery_images')) || defaultGallery;
+
+// Render Gallery Grid
+function renderGalleryGrid() {
+    const grid = document.getElementById('galleryGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    if (galleryImages.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #a0aec0; padding: 40px 10px; font-size: 0.85rem;">
+            No images in gallery yet. Click <strong>"➕ ADD IMAGE"</strong> above to upload site photos.
+        </div>`;
+        return;
+    }
+
+    galleryImages.forEach((img, idx) => {
+        const card = document.createElement('div');
+        card.className = 'gallery-card';
+        card.onclick = function() { openLightboxAtIndex(idx); };
+
+        card.innerHTML = `
+            <img src="${img.src}" alt="${img.title}">
+            <div class="gallery-card-title">${img.title}</div>
+        `;
+        grid.appendChild(card);
+    });
+}
         // PDF Dimensions for Plots 15 to 112: 33'0" short side x 52'6" long side
         let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {
             "1": { dim: "34'9\" x 65'3\"", area: "250.87", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
@@ -1235,7 +1259,6 @@ for (let i = 1; i <= 121; i++) {
 if (heroGroup) {
     let scaleX, scaleZ;
 
-    // A. Dimension Swap Logic (Swaps X/Z for North Row Plots 1-14)
     if (dbData.swapScale) {
         scaleX = targetSize.z / Math.max(heroBaseBoxSize.x, 0.001);
         scaleZ = targetSize.x / Math.max(heroBaseBoxSize.z, 0.001);
@@ -1244,27 +1267,35 @@ if (heroGroup) {
         scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
     }
 
-    // B. Directional Scale Flips
-    if (dbData.facing === "East") {
-        scaleX = -scaleX; // East facings flip along the short side (X)
-    } else if (dbData.facing === "West") {
-        scaleZ = -scaleZ; // West facings flip along the long depth side (Z)
-    }
+    // -------------------------------------------------------------
+    // ADD / MODIFY THIS BLOCK FOR WEST-FACING PLOTS ONLY
+    // -------------------------------------------------------------
+    if (dbData.facing === "West") {
+        // Option 1: Flip axis direction (standard directional alignment)
+        scaleZ = -scaleZ; 
 
-    // C. Set Position & Rotation (0°, 90°, or 180°)
+        // Option 2: Apply a custom dimension multiplier (e.g., scale length by 1.1x)
+        // scaleZ = -scaleZ * 1.1; 
+        // scaleX = scaleX * 1.05;
+    } else if (dbData.facing === "East") {
+        scaleX = -scaleX;
+    }
+    // -------------------------------------------------------------
+
     heroGroup.position.set(center.x, center.y + 2.2, center.z);
     if (dbData.rot !== undefined) {
         heroGroup.rotation.set(0, THREE.MathUtils.degToRad(dbData.rot), 0);
     }
 
-    // D. Inverse Scaling for 3D Pin Dropper (Keeps pin uniform)
     heroGroup.visible = true;
+
     if (pinDropperMesh) {
         pinDropperMesh.scale.set(0.45 / Math.abs(scaleX), 0.45, 0.45 / Math.abs(scaleZ));
     }
 
-    // E. GSAP Spring Scale Animation
     heroGroup.scale.set(0, 0, 0);
+
+    // Apply the updated scale factors to GSAP
     gsap.to(heroGroup.scale, { 
         x: scaleX, 
         y: 1.0, 
