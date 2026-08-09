@@ -1255,7 +1255,8 @@
                     if (dbData.facing === "East") {
                         scaleX = -scaleX; // East facings scale -1 along short side (X)
                     } else if (dbData.facing === "West") {
-                        scaleZ = scaleZ; // West facings scale -1 along long side (Z)
+                        scaleZ = -scaleZ; // West facings scale -1 along long side (Z)
+                        scalex = -scalex;
                     }
 
                     heroGroup.position.set(center.x, center.y + 2.2, center.z);
