@@ -691,35 +691,35 @@
                 id: "cricket_pitch", 
                 title: "Cricket Pitch & Ground", 
                 coords: [28, 1.5, -35], 
-                img: "assets/images/Logo.png", 
+                img: "assets/images/gallery/cricket_pitch.jpg", 
                 desc: "Net cricket pitch with green lawn area." 
             },
             { 
                 id: "badminton_court", 
                 title: "Badminton / Pickleball Courts", 
                 coords: [28, 1.5, -22], 
-                img: "assets/images/Logo.png", 
+                img: "assets/images/gallery/badminton_court.jpg", 
                 desc: "Outdoor dual sports courts with night lighting." 
             },
             { 
                 id: "amphitheater", 
                 title: "Circular Open Amphitheater", 
                 coords: [28, 1.5, -10], 
-                img: "assets/images/Logo.png", 
+                img: "assets/images/gallery/amphitheater.jpg", 
                 desc: "Tiered seating outdoor amphitheater for community gatherings." 
             },
             { 
                 id: "children_play", 
                 title: "Children's Play Area & Swings", 
                 coords: [28, 1.5, 8], 
-                img: "assets/images/Logo.png", 
+                img: "assets/images/gallery/play_area.jpg", 
                 desc: "Multi-play slides, swings, and rubberized safety play park." 
             },
             { 
                 id: "gazebo_fountain", 
                 title: "Pergola Gazebo & Water Fountain", 
                 coords: [28, 1.5, 28], 
-                img: "assets/images/Logo.png", 
+                img: "assets/images/gallery/gazebo.jpg", 
                 desc: "Shaded wooden pergola gazebo accompanied by a circular water fountain plaza." 
             }
         ];
@@ -734,9 +734,14 @@
             "sales": { pass: "sales123", role: "sales" }
         };
 
+        // DEFAULT GALLERY LIST DIRECTED TO ASSETS/IMAGES/GALLERY/
         let defaultGallery = [
-            { id: 1, title: "Park Plan Layout", src: "assets/images/Logo.png" },
-            { id: 2, title: "Project Entrance View", src: "assets/images/Logo.png" }
+            { id: 1, title: "Park Layout Plan", src: "assets/images/gallery/park_plan.jpg" },
+            { id: 2, title: "Project Entrance View", src: "assets/images/Logo.png" },
+            { id: 3, title: "Cricket Pitch & Sports Zone", src: "assets/images/gallery/cricket_pitch.jpg" },
+            { id: 4, title: "Open Amphitheater", src: "assets/images/gallery/amphitheater.jpg" },
+            { id: 5, title: "Children's Play Park", src: "assets/images/gallery/play_area.jpg" },
+            { id: 6, title: "Gazebo & Water Fountain", src: "assets/images/gallery/gazebo.jpg" }
         ];
 
         let galleryImages = JSON.parse(localStorage.getItem('neopolis_gallery_images')) || defaultGallery;
@@ -983,7 +988,7 @@
 
         map.on('style.load', () => { map.addLayer(customThreeLayer); });
 
-        // Ground Banner with Rounded Edges, Smooth Opacity, and ENLARGED (56px) Dynamic Percentage Progress Sub-Text
+        // Ground Banner with Rounded Edges, Smooth Opacity, and ENLARGED (72px) Dynamic Percentage Progress Sub-Text
         function createGroundImageLoader(scene) {
             const textureLoader = new THREE.TextureLoader();
             
@@ -994,7 +999,7 @@
                 const imgHeight = tex.image.height || 256;
                 const aspectRatio = imgWidth / imgHeight;
 
-                const planeHeight = 40; 
+                const planeHeight = 42; 
                 const planeWidth = planeHeight * aspectRatio;
 
                 const canvas = document.createElement('canvas');
@@ -1026,16 +1031,18 @@
                 groundTextGroup.add(mainLogoMesh);
 
                 progressCanvas = document.createElement('canvas');
-                progressCanvas.width = 512; progressCanvas.height = 128;
+                progressCanvas.width = 1024; progressCanvas.height = 256;
                 updateGroundProgressCanvas(0);
 
                 progressTexture = new THREE.CanvasTexture(progressCanvas);
-                const progressGeo = new THREE.PlaneGeometry(30, 7.5);
-                const progressMat = new THREE.MeshBasicMaterial({ map: progressTexture, side: THREE.DoubleSide, transparent: true, opacity: 0.9, depthTest: false });
+                
+                // Enlarged Geometry Footprint (60 x 15) for Prominent Text Visibility
+                const progressGeo = new THREE.PlaneGeometry(60, 15);
+                const progressMat = new THREE.MeshBasicMaterial({ map: progressTexture, side: THREE.DoubleSide, transparent: true, opacity: 0.95, depthTest: false });
 
                 const progressMesh = new THREE.Mesh(progressGeo, progressMat);
                 progressMesh.rotation.x = -Math.PI / 2;
-                progressMesh.position.set(0, 0.1, (planeHeight / 2) + 6);
+                progressMesh.position.set(0, 0.2, (planeHeight / 2) + 10);
                 groundTextGroup.add(progressMesh);
 
                 groundTextGroup.position.set(0, 0.5, 0);
@@ -1045,18 +1052,18 @@
             });
         }
 
-        // Enlarged 56px Bold Gold Text
+        // Enlarged Crisp Gold Text (72px)
         function updateGroundProgressCanvas(percent) {
             if (!progressCanvas) return;
             const ctx = progressCanvas.getContext('2d');
-            ctx.clearRect(0, 0, 512, 128);
+            ctx.clearRect(0, 0, 1024, 256);
 
-            ctx.font = "Bold 56px Outfit, sans-serif";
+            ctx.font = "Bold 72px Outfit, sans-serif";
             ctx.fillStyle = "#d4af37";
             ctx.textAlign = "center";
-            ctx.shadowColor = "rgba(0,0,0,0.9)";
-            ctx.shadowBlur = 10;
-            ctx.fillText(`LOADING... ${percent}%`, 256, 75);
+            ctx.shadowColor = "rgba(0,0,0,0.95)";
+            ctx.shadowBlur = 12;
+            ctx.fillText(`LOADING MASTER PLAN... ${percent}%`, 512, 140);
 
             if (progressTexture) progressTexture.needsUpdate = true;
             if (map) map.triggerRepaint();
@@ -1150,7 +1157,7 @@
             });
         }
 
-        // Two-Phase Click Handler with Expanded Park Detection Radius
+        // Two-Phase Click Handler with Expanded Park Mesh Detection
         map.on('click', (e) => {
             if (!loadedModel || !customThreeLayer.camera) return;
 
