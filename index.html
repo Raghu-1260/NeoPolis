@@ -791,11 +791,12 @@ for (let i = 1; i <= 121; i++) {
     }
 
     // 1. Plots 1 to 14: North Facing, Turned Towards South, Swapped Dimensions
-    if (i >= 1 && i <= 14) {
-        plotDatabase[key].facing = "North";
-        plotDatabase[key].rot = 270; // Rotates hero plot to face South road
-        plotDatabase[key].swapScale = true; // Swaps width and length for accurate hero mesh bounds
-    } 
+    // 1. Plots 1 to 14: North Row Rotation Correction
+if (i >= 1 && i <= 14) {
+    plotDatabase[key].facing = "North";
+    plotDatabase[key].rot = 90; // Rotated +180° from 270° -> 90°
+    plotDatabase[key].swapScale = true;
+} 
     // 2. West Columns (Plots 15-27, 41-53, 67-79, 93-105, 116-121)
     else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
         plotDatabase[key].facing = "West";
@@ -1755,23 +1756,28 @@ for (let i = 1; i <= 121; i++) {
                 lineL.setAttribute('x2', screenPoints[2].x); lineL.setAttribute('y2', screenPoints[2].y);
             }
 
-            const labelA = document.getElementById('dimSideA'), labelB = document.getElementById('dimSideB');
-            const plotData = plotDatabase[selectedPlotNum] || { dim: "34.7' x 65.0'", facing: "North" };
-            const dimParts = plotData.dim.split('x');
+            const labelA = document.getElementById('dimSideA');
+const labelB = document.getElementById('dimSideB');
+const plotData = plotDatabase[selectedPlotNum] || { dim: "34.7' x 65.0'", facing: "North" };
+const dimParts = plotData.dim.split('x');
 
-            if (labelA && labelB && dimParts.length === 2) {
-                const plotInt = parseInt(selectedPlotNum, 10);
-                if (plotInt >= 1 && plotInt <= 14) {
-                    labelA.innerText = dimParts[0].trim(); labelB.innerText = dimParts[1].trim();
-                } else {
-                    labelA.innerText = dimParts[1].trim(); labelB.innerText = dimParts[0].trim();
-                }
+if (labelA && labelB && dimParts.length === 2) {
+    const plotInt = parseInt(selectedPlotNum, 10);
+    
+    // Swapped dimension text logic for North plots (1-14)
+    if (plotInt >= 1 && plotInt <= 14) {
+        labelA.innerText = dimParts[1].trim(); // Longer edge now assigned to front line
+        labelB.innerText = dimParts[0].trim(); // Shorter edge assigned to side line
+    } else {
+        labelA.innerText = dimParts[0].trim();
+        labelB.innerText = dimParts[1].trim();
+    }
 
-                labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
-                labelA.style.top = `${(screenPoints[0].y + screenPoints[1].y) / 2 - 10}px`;
-                labelB.style.left = `${(screenPoints[1].x + screenPoints[2].x) / 2 + 15}px`;
-                labelB.style.top = `${(screenPoints[1].y + screenPoints[2].y) / 2}px`;
-            }
+    labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
+    labelA.style.top = `${(screenPoints[0].y + screenPoints[1].y) / 2 - 10}px`;
+    labelB.style.left = `${(screenPoints[1].x + screenPoints[2].x) / 2 + 15}px`;
+    labelB.style.top = `${(screenPoints[1].y + screenPoints[2].y) / 2}px`;
+}
 
             const centerVector = new THREE.Vector3();
             box.getCenter(centerVector);
