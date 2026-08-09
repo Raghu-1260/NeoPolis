@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Avenue Interactive | NeoPolis Springs Master Plan</title>
+    <title>ZenArch Studios | NeoPolis Springs Master Plan</title>
 
     <!-- Zen Arch Tab Favicon Logo -->
     <link rel="icon" type="image/png" href="assets/images/ZenArch_Logo.png">
@@ -99,7 +99,7 @@
             width: 100%; height: auto; max-height: 40px; object-fit: contain; margin-bottom: 8px; display: block;
         }
 
-        /* Dynamic Collapsible Info Panel with Mouse Scroll Enabled */
+        /* Dynamic Collapsible Info Panel with Mouse Scroll */
         .info-panel {
             position: absolute; top: 70px; left: 15px; width: 320px;
             border-radius: 20px; padding: 18px; z-index: 10;
@@ -303,7 +303,7 @@
             font-size: 0.72rem; font-weight: 700; color: #22c55e; display: flex; justify-content: space-between;
         }
 
-        /* 80% SCALE LIGHTBOX WITH NEXT/PREV ARROWS */
+        /* LIGHTBOX OVERLAY */
         .image-lightbox {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.92); z-index: 1050; display: none;
@@ -691,16 +691,58 @@
             "sales": { pass: "sales123", role: "sales" }
         };
 
+        // Static Image Gallery Initializer
         let galleryImages = JSON.parse(localStorage.getItem('neopolis_gallery_images')) || [
-            { id: 1, title: "Park Plan Layout", src: "assets/images/park_plan.jpg" }
+            { id: 1, title: "Park Plan Layout", src: "assets/images/park_plan.jpg" },
+            { id: 2, title: "Project Entrance View", src: "assets/images/Logo.png" }
         ];
 
-        let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {};
+        // PDF Dimensions Extracted Mapping
+        let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {
+            "1": { dim: "34'9\" x 65'3\"", area: "250.87", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "2": { dim: "35'0\" x 65'3\"", area: "252.19", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "3": { dim: "72'3\" x 64'6\"", area: "504.06", facing: "North", status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
+            "4": { dim: "35'0\" x 64'4\"", area: "250.00", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "5": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "6": { dim: "74'5\" x 64'2\"", area: "529.82", facing: "North", status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
+            "7": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "8": { dim: "35'0\" x 64'5\"", area: "250.80", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "9": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "10": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "11": { dim: "33'0\" x 65'2\"", area: "240.00", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "12": { dim: "74'8\" x 65'4\"", area: "541.41", facing: "North", status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
+            "13": { dim: "50'0\" x 64'8\"", area: "358.47", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "14": { dim: "44'3\" x 61'7\"", area: "315.00", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "15": { dim: "36'0\" x 50'0\"", area: "200.14", facing: "East", status: "AVAILABLE", owner: "Unassigned" },
+            "65": { dim: "36'0\" x 52'6\"", area: "210.11", facing: "East", status: "HOLD", owner: "Mortgaged to APCRDA" },
+            "66": { dim: "36'0\" x 52'6\"", area: "210.11", facing: "East", status: "HOLD", owner: "Mortgaged to APCRDA" },
+            "67": { dim: "33'0\" x 52'6\"", area: "192.51", facing: "West", status: "HOLD", owner: "Mortgaged to APCRDA" },
+            "116": { dim: "92'11\" x 49'6\"", area: "Park Space", facing: "North", status: "HOLD", owner: "Amenity / Utility Space" },
+            "117": { dim: "95'11\" x 49'6\"", area: "535.89", facing: "North", status: "HOLD", owner: "Mortgaged to APCRDA" },
+            "118": { dim: "102'4\" x 58'0\"", area: "648.63", facing: "West", status: "HOLD", owner: "Landowner Share" },
+            "119": { dim: "105'10\" x 58'0\"", area: "675.00", facing: "West", status: "HOLD", owner: "Amenity / Utility Space" },
+            "120": { dim: "109'2\" x 58'1\"", area: "693.28", facing: "West", status: "HOLD", owner: "Landowner Share" },
+            "121": { dim: "112'2\" x 57'1\"", area: "701.11", facing: "West", status: "HOLD", owner: "Landowner Share" }
+        };
 
         for (let i = 1; i <= 121; i++) {
             const key = String(i);
             if (!plotDatabase[key]) {
-                plotDatabase[key] = { dim: "30.0' x 55.0'", area: "183", facing: "East", status: "AVAILABLE", owner: "Unassigned", reserved_by_id: "" };
+                let dim = "33'0\" x 50'0\"";
+                let area = "183.36";
+                let facing = "East";
+
+                if (i >= 28 && i <= 41) {
+                    dim = "33'0\" x 51'3\""; area = "188.00";
+                } else if (i >= 67 && i <= 105) {
+                    dim = "33'0\" x 52'6\""; area = "192.51";
+                }
+
+                if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
+                    facing = "West";
+                }
+
+                plotDatabase[key] = { dim: dim, area: area, facing: facing, status: "AVAILABLE", owner: "Unassigned" };
             }
 
             if (MORTGAGE_LANDS.includes(key)) {
@@ -709,14 +751,6 @@
             } else if (AMENITY_LANDS.includes(key) || key === "119") {
                 plotDatabase[key].status = "HOLD";
                 plotDatabase[key].owner = "Amenity / Utility Space";
-            }
-
-            if (i >= 1 && i <= 14) {
-                plotDatabase[key].facing = "North"; plotDatabase[key].rot = 90; plotDatabase[key].swapScale = true;
-            } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
-                plotDatabase[key].facing = "West"; plotDatabase[key].rot = 180;
-            } else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
-                plotDatabase[key].facing = "East"; plotDatabase[key].rot = 180;
             }
         }
         
@@ -804,8 +838,8 @@
                 dirLight.position.set(120, 250, 100);
                 this.scene.add(dirLight);
 
-                // Create Canvas-driven 3D Ground Text "NeoPolis Springs" during loading
-                createGroundLoadingText(this.scene);
+                // Create Image-based 3D Ground Banner "NeoPollis Name.png" matching 50% width
+                createGroundImageLoader(this.scene);
 
                 heroGroup = new THREE.Group();
                 heroGroup.visible = false;
@@ -833,7 +867,7 @@
                     });
 
                     this.scene.add(loadedModel);
-                    if (groundTextGroup) groundTextGroup.visible = false; // Hide ground loading text once model renders
+                    if (groundTextGroup) groundTextGroup.visible = false; // Hide ground graphic once GLB renders
 
                     updatePlotColorsFromDB();
                     updateUserRoleUI();
@@ -892,30 +926,40 @@
 
         map.on('style.load', () => { map.addLayer(customThreeLayer); });
 
-        // 3D Ground Text tracked to terrain while GLB loads
-        function createGroundLoadingText(scene) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1024; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = "rgba(13, 18, 28, 0.9)";
-            ctx.fillRect(0, 0, 1024, 256);
-            ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 8;
-            ctx.strokeRect(10, 10, 1004, 236);
-            ctx.font = "Bold 70px Outfit, sans-serif";
-            ctx.fillStyle = "#ffffff"; ctx.textAlign = "center";
-            ctx.fillText("NeoPolis SPRINGS", 512, 120);
-            ctx.font = "Bold 35px Outfit, sans-serif";
-            ctx.fillStyle = "#d4af37";
-            ctx.fillText("LOADING MASTER PLAN...", 512, 180);
+        // Image-driven Loading Banner ("NeoPollis Name.png") scaled to 50% layout footprint
+        function createGroundImageLoader(scene) {
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load('assets/images/NeoPollis Name.png', (tex) => {
+                const geo = new THREE.PlaneGeometry(60, 24); // 50% site footprint scale
+                const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true });
 
-            const texture = new THREE.CanvasTexture(canvas);
-            const geo = new THREE.PlaneGeometry(80, 20);
-            const mat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, transparent: true });
+                groundTextGroup = new THREE.Mesh(geo, mat);
+                groundTextGroup.rotation.x = -Math.PI / 2;
+                groundTextGroup.position.set(0, 0.5, 0);
+                scene.add(groundTextGroup);
+            }, undefined, () => {
+                // Canvas fallback if image fails
+                const canvas = document.createElement('canvas');
+                canvas.width = 1024; canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = "rgba(13, 18, 28, 0.9)";
+                ctx.fillRect(0, 0, 1024, 256);
+                ctx.font = "Bold 60px Outfit, sans-serif";
+                ctx.fillStyle = "#ffffff"; ctx.textAlign = "center";
+                ctx.fillText("NeoPolis SPRINGS", 512, 120);
+                ctx.font = "Bold 30px Outfit, sans-serif";
+                ctx.fillStyle = "#d4af37";
+                ctx.fillText("LOADING MASTER PLAN...", 512, 180);
 
-            groundTextGroup = new THREE.Mesh(geo, mat);
-            groundTextGroup.rotation.x = -Math.PI / 2;
-            groundTextGroup.position.set(0, 0.5, 0);
-            scene.add(groundTextGroup);
+                const tex = new THREE.CanvasTexture(canvas);
+                const geo = new THREE.PlaneGeometry(60, 18);
+                const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true });
+
+                groundTextGroup = new THREE.Mesh(geo, mat);
+                groundTextGroup.rotation.x = -Math.PI / 2;
+                groundTextGroup.position.set(0, 0.5, 0);
+                scene.add(groundTextGroup);
+            });
         }
 
         function create3DPinDropper() {
@@ -1005,7 +1049,7 @@
             });
 
             if (closestPlot) {
-                if (closestPlot === "116") openParkPlanModal(); // Plot 119 un-bound from park trigger
+                if (closestPlot === "116") openParkPlanModal();
                 selectedPlotNum = closestPlot;
                 document.getElementById('searchInput').value = closestPlot;
                 focusSelectedPlot(closestPlot);
