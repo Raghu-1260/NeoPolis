@@ -927,40 +927,58 @@
         map.on('style.load', () => { map.addLayer(customThreeLayer); });
 
         // Image-driven Loading Banner ("NeoPollis Name.png") scaled to 50% layout footprint
-        function createGroundImageLoader(scene) {
-            const textureLoader = new THREE.TextureLoader();
-            textureLoader.load('assets/images/NeoPollis Name.png', (tex) => {
-                const geo = new THREE.PlaneGeometry(60, 24); // 50% site footprint scale
-                const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true });
+        // Image-driven Ground Loading Banner ("NeoPollis Name.png")
+function createGroundImageLoader(scene) {
+    const textureLoader = new THREE.TextureLoader();
+    
+    // URL-encoded path to prevent network fetch failures on file spaces
+    textureLoader.load('assets/images/NeoPollis%20Name.png?v=' + Date.now(), (tex) => {
+        tex.needsUpdate = true; // Force Three.js GPU texture refresh
+        
+        const geo = new THREE.PlaneGeometry(60, 24); // 50% site layout scale
+        const mat = new THREE.MeshBasicMaterial({ 
+            map: tex, 
+            side: THREE.DoubleSide, 
+            transparent: true,
+            depthTest: false // Keeps loader visible on top of terrain until GLB arrives
+        });
 
-                groundTextGroup = new THREE.Mesh(geo, mat);
-                groundTextGroup.rotation.x = -Math.PI / 2;
-                groundTextGroup.position.set(0, 0.5, 0);
-                scene.add(groundTextGroup);
-            }, undefined, () => {
-                // Canvas fallback if image fails
-                const canvas = document.createElement('canvas');
-                canvas.width = 1024; canvas.height = 256;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = "rgba(13, 18, 28, 0.9)";
-                ctx.fillRect(0, 0, 1024, 256);
-                ctx.font = "Bold 60px Outfit, sans-serif";
-                ctx.fillStyle = "#ffffff"; ctx.textAlign = "center";
-                ctx.fillText("NeoPolis SPRINGS", 512, 120);
-                ctx.font = "Bold 30px Outfit, sans-serif";
-                ctx.fillStyle = "#d4af37";
-                ctx.fillText("LOADING MASTER PLAN...", 512, 180);
+        groundTextGroup = new THREE.Mesh(geo, mat);
+        groundTextGroup.rotation.x = -Math.PI / 2;
+        groundTextGroup.position.set(0, 0.5, 0);
+        scene.add(groundTextGroup);
 
-                const tex = new THREE.CanvasTexture(canvas);
-                const geo = new THREE.PlaneGeometry(60, 18);
-                const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true });
+        // Force MapLibre to redraw canvas immediately when image finishes downloading
+        if (map) map.triggerRepaint();
+    }, undefined, (err) => {
+        console.warn("Ground loading image fetch failed, rendering fallback canvas:", err);
+        
+        // Canvas Fallback if image file is missing or misspelled
+        const canvas = document.createElement('canvas');
+        canvas.width = 1024; canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = "rgba(13, 18, 28, 0.95)";
+        ctx.fillRect(0, 0, 1024, 256);
+        ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 8;
+        ctx.strokeRect(10, 10, 1004, 236);
+        ctx.font = "Bold 65px Outfit, sans-serif";
+        ctx.fillStyle = "#ffffff"; ctx.textAlign = "center";
+        ctx.fillText("NeoPolis SPRINGS", 512, 120);
+        ctx.font = "Bold 32px Outfit, sans-serif";
+        ctx.fillStyle = "#d4af37";
+        ctx.fillText("LOADING MASTER PLAN...", 512, 185);
 
-                groundTextGroup = new THREE.Mesh(geo, mat);
-                groundTextGroup.rotation.x = -Math.PI / 2;
-                groundTextGroup.position.set(0, 0.5, 0);
-                scene.add(groundTextGroup);
-            });
-        }
+        const tex = new THREE.CanvasTexture(canvas);
+        const geo = new THREE.PlaneGeometry(60, 18);
+        const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true });
+
+        groundTextGroup = new THREE.Mesh(geo, mat);
+        groundTextGroup.rotation.x = -Math.PI / 2;
+        groundTextGroup.position.set(0, 0.5, 0);
+        scene.add(groundTextGroup);
+        if (map) map.triggerRepaint();
+    });
+}
 
         function create3DPinDropper() {
             if (!heroModel) return;
