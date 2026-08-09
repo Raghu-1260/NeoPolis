@@ -1713,67 +1713,79 @@ function focusSelectedPlot(num) {
         }
 
         function updateDimensionCallouts() {
-            if (!heroGroup || !heroGroup.visible || !selectedPlotNum || !allowDimensionDraw) return;
+    if (!heroGroup || !heroGroup.visible || !selectedPlotNum || !allowDimensionDraw) return;
 
-            heroGroup.updateMatrixWorld(true);
-            const box = new THREE.Box3().setFromObject(heroGroup);
+    heroGroup.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(heroGroup);
 
-            const topY = box.min.y + 0.2;
-            const corners = [
-                new THREE.Vector3(box.min.x, topY, box.max.z),
-                new THREE.Vector3(box.max.x, topY, box.max.z),
-                new THREE.Vector3(box.max.x, topY, box.min.z)
-            ];
+    const topY = box.min.y + 0.2;
+    const corners = [
+        new THREE.Vector3(box.min.x, topY, box.max.z),
+        new THREE.Vector3(box.max.x, topY, box.max.z),
+        new THREE.Vector3(box.max.x, topY, box.min.z)
+    ];
 
-            const screenPoints = corners.map(v => {
-                const clone = v.clone().project(customThreeLayer.camera);
-                return {
-                    x: (clone.x * 0.5 + 0.5) * map.getCanvas().clientWidth,
-                    y: (-(clone.y * 0.5) + 0.5) * map.getCanvas().clientHeight
-                };
-            });
+    const screenPoints = corners.map(v => {
+        const clone = v.clone().project(customThreeLayer.camera);
+        return {
+            x: (clone.x * 0.5 + 0.5) * map.getCanvas().clientWidth,
+            y: (-(clone.y * 0.5) + 0.5) * map.getCanvas().clientHeight
+        };
+    });
 
-            const lineW = document.getElementById('lineW'), lineL = document.getElementById('lineL');
-            if (lineW && lineL) {
-                lineW.setAttribute('x1', screenPoints[0].x); lineW.setAttribute('y1', screenPoints[0].y);
-                lineW.setAttribute('x2', screenPoints[1].x); lineW.setAttribute('y2', screenPoints[1].y);
-                lineL.setAttribute('x1', screenPoints[1].x); lineL.setAttribute('y1', screenPoints[1].y);
-                lineL.setAttribute('x2', screenPoints[2].x); lineL.setAttribute('y2', screenPoints[2].y);
-            }
+    const lineW = document.getElementById('lineW'), lineL = document.getElementById('lineL');
+    if (lineW && lineL) {
+        lineW.setAttribute('x1', screenPoints[0].x); lineW.setAttribute('y1', screenPoints[0].y);
+        lineW.setAttribute('x2', screenPoints[1].x); lineW.setAttribute('y2', screenPoints[1].y);
+        lineL.setAttribute('x1', screenPoints[1].x); lineL.setAttribute('y1', screenPoints[1].y);
+        lineL.setAttribute('x2', screenPoints[2].x); lineL.setAttribute('y2', screenPoints[2].y);
+    }
 
-            const labelA = document.getElementById('dimSideA'), labelB = document.getElementById('dimSideB');
-            const plotData = plotDatabase[selectedPlotNum] || { dim: "33'0\" x 52'6\"", facing: "West" };
-            const dimParts = plotData.dim.split('x');
+    const labelA = document.getElementById('dimSideA'), labelB = document.getElementById('dimSideB');
+    const plotData = plotDatabase[selectedPlotNum] || { dim: "33'0\" x 52'6\"", facing: "West" };
+    const dimParts = plotData.dim.split('x');
 
-            if (labelA && labelB && dimParts.length === 2) {
-                const plotInt = parseInt(selectedPlotNum, 10);
-                
-                if (plotInt >= 1 && plotInt <= 14) {
-                    labelA.innerText = dimParts[0].trim(); 
-                    labelB.innerText = dimParts[1].trim(); 
-                } else if (plotData.facing === "West" || plotData.facing === "East") {
-                    labelA.innerText = dimParts[0].trim(); 
-                    labelB.innerText = dimParts[1].trim(); 
-                } else {
-                    labelA.innerText = dimParts[0].trim();
-                    labelB.innerText = dimParts[1].trim();
-                }
-
-                labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
-                labelA.style.top = `${(screenPoints[0].y + screenPoints[1].y) / 2 - 10}px`;
-                labelB.style.left = `${(screenPoints[1].x + screenPoints[2].x) / 2 + 15}px`;
-                labelB.style.top = `${(screenPoints[1].y + screenPoints[2].y) / 2}px`;
-            }
-
-            const centerVector = new THREE.Vector3();
-            box.getCenter(centerVector);
-            const centerScreen = centerVector.project(customThreeLayer.camera);
-            const badgeEl = document.getElementById('heroPlotBadge');
-            if (badgeEl) {
-                badgeEl.style.left = `${(centerScreen.x * 0.5 + 0.5) * map.getCanvas().clientWidth}px`;
-                badgeEl.style.top = `${(-(centerScreen.y * 0.5) + 0.5) * map.getCanvas().clientHeight - 30}px`;
-            }
+    if (labelA && labelB && dimParts.length === 2) {
+        const plotInt = parseInt(selectedPlotNum, 10);
+        
+        // ==========================================
+        // INDIVIDUAL DIMENSION NUMBER SWAPS FOR EAST & WEST
+        // ==========================================
+        if (plotInt >= 1 && plotInt <= 14) {
+            // North Plots
+            labelA.innerText = dimParts[0].trim(); 
+            labelB.innerText = dimParts[1].trim(); 
+        } 
+        else if (plotData.facing === "East") {
+            // East Plots: Swap or keep index order individually
+            labelA.innerText = dimParts[0].trim(); 
+            labelB.innerText = dimParts[1].trim(); 
+        } 
+        else if (plotData.facing === "West") {
+            // West Plots: Swap or keep index order individually (swapped here to match your reference image)
+            labelA.innerText = dimParts[1].trim(); 
+            labelB.innerText = dimParts[0].trim(); 
+        } 
+        else {
+            labelA.innerText = dimParts[0].trim();
+            labelB.innerText = dimParts[1].trim();
         }
+
+        labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
+        labelA.style.top = `${(screenPoints[0].y + screenPoints[1].y) / 2 - 10}px`;
+        labelB.style.left = `${(screenPoints[1].x + screenPoints[2].x) / 2 + 15}px`;
+        labelB.style.top = `${(screenPoints[1].y + screenPoints[2].y) / 2}px`;
+    }
+
+    const centerVector = new THREE.Vector3();
+    box.getCenter(centerVector);
+    const centerScreen = centerVector.project(customThreeLayer.camera);
+    const badgeEl = document.getElementById('heroPlotBadge');
+    if (badgeEl) {
+        badgeEl.style.left = `${(centerScreen.x * 0.5 + 0.5) * map.getCanvas().clientWidth}px`;
+        badgeEl.style.top = `${(-(centerScreen.y * 0.5) + 0.5) * map.getCanvas().clientHeight - 30}px`;
+    }
+}
 
         function openParkPlanModal() { renderGalleryGrid(); document.getElementById('parkModal').style.display = 'flex'; }
         function closeParkPlanModal() { document.getElementById('parkModal').style.display = 'none'; }
