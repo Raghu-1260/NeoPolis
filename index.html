@@ -685,45 +685,44 @@
 
         let progressCanvas = null, progressTexture = null;
 
-        // PARK AMENITIES HOTSPOT DATA (You can edit these coordinates and image paths)
-        // Updated Park Amenities Data mapped visually from North to South (facing Plots 27 down to 15)
-const PARK_AMENITIES_DATA = [
-    { 
-        id: "cricket_pitch", 
-        title: "Cricket Pitch & Ground", 
-        coords: [28, 1.5, -35], // Aligned next to Plot 27
-        img: "assets/images/Logo.png", 
-        desc: "Net cricket pitch with green lawn area." 
-    },
-    { 
-        id: "badminton_court", 
-        title: "Badminton / Pickleball Courts", 
-        coords: [28, 1.5, -22], // Aligned next to Plot 25/26
-        img: "assets/images/Logo.png", 
-        desc: "Outdoor dual sports courts with night lighting." 
-    },
-    { 
-        id: "amphitheater", 
-        title: "Circular Open Amphitheater", 
-        coords: [28, 1.5, -10], // Aligned next to Plot 23/24
-        img: "assets/images/Logo.png", 
-        desc: "Tiered seating outdoor amphitheater for community gatherings." 
-    },
-    { 
-        id: "children_play", 
-        title: "Children's Play Area & Swings", 
-        coords: [28, 1.5, 8], // Aligned next to Plot 18/19
-        img: "assets/images/Logo.png", 
-        desc: "Multi-play slides, swings, and rubberized safety play park." 
-    },
-    { 
-        id: "gazebo_fountain", 
-        title: "Pergola Gazebo & Water Fountain", 
-        coords: [28, 1.5, 28], // Aligned next to Plot 15/16
-        img: "assets/images/Logo.png", 
-        desc: "Shaded wooden pergola gazebo accompanied by a circular water fountain plaza." 
-    }
-];
+        // PARK AMENITIES HOTSPOT DATA mapped visually North to South (facing Plots 27 down to 15)
+        const PARK_AMENITIES_DATA = [
+            { 
+                id: "cricket_pitch", 
+                title: "Cricket Pitch & Ground", 
+                coords: [28, 1.5, -35], 
+                img: "assets/images/Logo.png", 
+                desc: "Net cricket pitch with green lawn area." 
+            },
+            { 
+                id: "badminton_court", 
+                title: "Badminton / Pickleball Courts", 
+                coords: [28, 1.5, -22], 
+                img: "assets/images/Logo.png", 
+                desc: "Outdoor dual sports courts with night lighting." 
+            },
+            { 
+                id: "amphitheater", 
+                title: "Circular Open Amphitheater", 
+                coords: [28, 1.5, -10], 
+                img: "assets/images/Logo.png", 
+                desc: "Tiered seating outdoor amphitheater for community gatherings." 
+            },
+            { 
+                id: "children_play", 
+                title: "Children's Play Area & Swings", 
+                coords: [28, 1.5, 8], 
+                img: "assets/images/Logo.png", 
+                desc: "Multi-play slides, swings, and rubberized safety play park." 
+            },
+            { 
+                id: "gazebo_fountain", 
+                title: "Pergola Gazebo & Water Fountain", 
+                coords: [28, 1.5, 28], 
+                img: "assets/images/Logo.png", 
+                desc: "Shaded wooden pergola gazebo accompanied by a circular water fountain plaza." 
+            }
+        ];
 
         let parkPinsGroup = new THREE.Group();
 
@@ -785,7 +784,6 @@ const PARK_AMENITIES_DATA = [
                 plotDatabase[key] = { dim: dim, area: area, status: "AVAILABLE", owner: "Unassigned" };
             }
 
-            // Facing Rules: East columns face West (rot: 180), West columns face East (rot: 0)
             if (i >= 1 && i <= 14) {
                 plotDatabase[key].facing = "East"; plotDatabase[key].rot = 90; plotDatabase[key].swapScale = true;
             } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
@@ -985,7 +983,7 @@ const PARK_AMENITIES_DATA = [
 
         map.on('style.load', () => { map.addLayer(customThreeLayer); });
 
-        // Ground Banner with Rounded Edges, Smooth Opacity, and Dynamic Percentage Progress Sub-Text
+        // Ground Banner with Rounded Edges, Smooth Opacity, and ENLARGED (56px) Dynamic Percentage Progress Sub-Text
         function createGroundImageLoader(scene) {
             const textureLoader = new THREE.TextureLoader();
             
@@ -1047,17 +1045,18 @@ const PARK_AMENITIES_DATA = [
             });
         }
 
+        // Enlarged 56px Bold Gold Text
         function updateGroundProgressCanvas(percent) {
             if (!progressCanvas) return;
             const ctx = progressCanvas.getContext('2d');
             ctx.clearRect(0, 0, 512, 128);
 
-            ctx.font = "Bold 38px Outfit, sans-serif";
+            ctx.font = "Bold 56px Outfit, sans-serif";
             ctx.fillStyle = "#d4af37";
             ctx.textAlign = "center";
-            ctx.shadowColor = "rgba(0,0,0,0.8)";
-            ctx.shadowBlur = 6;
-            ctx.fillText(`LOADING MASTER PLAN... ${percent}%`, 256, 70);
+            ctx.shadowColor = "rgba(0,0,0,0.9)";
+            ctx.shadowBlur = 10;
+            ctx.fillText(`LOADING... ${percent}%`, 256, 75);
 
             if (progressTexture) progressTexture.needsUpdate = true;
             if (map) map.triggerRepaint();
@@ -1151,7 +1150,7 @@ const PARK_AMENITIES_DATA = [
             });
         }
 
-        // Two-Phase Click Handler (Park Highlight -> Pins Reveal -> Amenity Photo Lightbox)
+        // Two-Phase Click Handler with Expanded Park Detection Radius
         map.on('click', (e) => {
             if (!loadedModel || !customThreeLayer.camera) return;
 
@@ -1190,7 +1189,7 @@ const PARK_AMENITIES_DATA = [
                 const clickY = (-(screenPos.y * 0.5) + 0.5) * map.getCanvas().clientHeight;
 
                 const dist = Math.hypot(e.point.x - clickX, e.point.y - clickY);
-                if (dist < minDistance && dist < 70) {
+                if (dist < minDistance && dist < 85) {
                     minDistance = dist;
                     closestPlot = plotNum;
                 }
@@ -1198,9 +1197,11 @@ const PARK_AMENITIES_DATA = [
 
             if (closestPlot) {
                 const targetMesh = plotMeshes[closestPlot];
-                const isParkMesh = targetMesh.name.toLowerCase().includes("park") || targetMesh.name.toLowerCase().includes("open");
+                const meshName = targetMesh.name ? targetMesh.name.toLowerCase() : "";
 
-                if (isParkMesh) {
+                const isParkPlane = meshName.includes("park") || meshName.includes("open") || meshName.includes("amenity") || closestPlot === "park";
+
+                if (isParkPlane) {
                     activateParkZoneHighlight(closestPlot, targetMesh);
                     return;
                 }
@@ -1217,7 +1218,9 @@ const PARK_AMENITIES_DATA = [
 
         function activateParkZoneHighlight(plotNum, parkMesh) {
             selectedPlotNum = plotNum;
-            parkMesh.material = new THREE.MeshBasicMaterial({ color: 0x22c55e, side: THREE.DoubleSide });
+            if (parkMesh && parkMesh.material) {
+                parkMesh.material = new THREE.MeshBasicMaterial({ color: 0x22c55e, side: THREE.DoubleSide });
+            }
 
             Object.keys(plotMeshes).forEach(pKey => {
                 if (pKey !== plotNum && plotMeshes[pKey].material) {
@@ -1227,9 +1230,9 @@ const PARK_AMENITIES_DATA = [
 
             if (parkPinsGroup) parkPinsGroup.visible = true;
 
-            document.getElementById('plotId').innerText = "PARK ZONE";
-            document.getElementById('plotArea').innerText = "Landscaped Area";
-            document.getElementById('plotDim').innerText = "Amenity Lawn";
+            document.getElementById('plotId').innerText = "PARK & AMENITIES";
+            document.getElementById('plotArea').innerText = "Landscaped Park Strip";
+            document.getElementById('plotDim').innerText = "East Corridor";
             document.getElementById('plotFacing').innerText = "East Boundary";
             document.getElementById('plotStatus').innerText = "AMENITY";
             document.getElementById('plotStatus').className = "status-badge hold";
