@@ -715,7 +715,7 @@
             });
         }
 
-        // Complete Plot Database mapping explicitly with your exact values
+        // Explicit Database Mapping for All Specific Plots (1-14, 15-115, 116-121)
         let plotDataSourceExplicit = {
             "1": { dim: "34'9\" x 64'6\"", area: "250" },
             "2": { dim: "35'0\" x 64'6\"", area: "252" },
@@ -1223,7 +1223,7 @@
             }
         }
 
-        // WEST PLOTS ROTATED 180 DEGREES FROM EXISTING ROTATIONS (Rot 360 / 180 offset applied)
+        // UNTOUCHED HERO SCALING & ROTATION FUNCTION (Ensuring correct 180 offset for West plots and normal layout for East)
         function focusSelectedPlot(num) {
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
             selectedPlotNum = query;
@@ -1276,7 +1276,7 @@
                     if (dbData.rot !== undefined) {
                         let finalRotation = dbData.rot;
                         if (dbData.facing === "West") {
-                            finalRotation += 180; // Rotates West plots 180 degrees from original rotation
+                            finalRotation += 180; // Rotates West plots 180 degrees
                         }
                         heroGroup.rotation.set(0, THREE.MathUtils.degToRad(finalRotation), 0);
                     }
@@ -1695,7 +1695,7 @@
             });
         }
 
-        // Updated Dimension Callouts mapping correct dimension parts for North and West/East plots
+        // Updated Dimension Callouts unswapping width and length text ordering for West/East plots
         function updateDimensionCallouts() {
             if (!heroGroup || !heroGroup.visible || !selectedPlotNum || !allowDimensionDraw) return;
 
@@ -1733,11 +1733,11 @@
                 const plotInt = parseInt(selectedPlotNum, 10);
                 
                 if (plotInt >= 1 && plotInt <= 14) {
-                    labelA.innerText = dimParts[0].trim(); 
-                    labelB.innerText = dimParts[1].trim(); 
+                    labelA.innerText = dimParts[1].trim(); 
+                    labelB.innerText = dimParts[0].trim(); 
                 } else if (plotData.facing === "West" || plotData.facing === "East") {
-                    labelA.innerText = dimParts[0].trim(); 
-                    labelB.innerText = dimParts[1].trim(); 
+                    labelA.innerText = dimParts[1].trim(); 
+                    labelB.innerText = dimParts[0].trim(); 
                 } else {
                     labelA.innerText = dimParts[0].trim();
                     labelB.innerText = dimParts[1].trim();
