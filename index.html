@@ -715,7 +715,7 @@
             });
         }
 
-        // Complete Plot Database populated with your exact specified values
+        // Complete Plot Database mapping explicitly with your exact values
         let plotDataSourceExplicit = {
             "1": { dim: "34'9\" x 64'6\"", area: "250" },
             "2": { dim: "35'0\" x 64'6\"", area: "252" },
@@ -1223,7 +1223,7 @@
             }
         }
 
-        // EXACT ORIGINAL WORKING HERO PLOT SCALING & ROTATION CODE (Restored)
+        // EXACT ORIGINAL WORKING HERO PLOT SCALING & ROTATION CODE (Untouched)
         function focusSelectedPlot(num) {
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
             selectedPlotNum = query;
@@ -1689,6 +1689,7 @@
             });
         }
 
+        // Updated Dimension Callouts function with swapped dimension text parts (dimParts[1] and dimParts[0])
         function updateDimensionCallouts() {
             if (!heroGroup || !heroGroup.visible || !selectedPlotNum || !allowDimensionDraw) return;
 
@@ -1726,14 +1727,11 @@
                 const plotInt = parseInt(selectedPlotNum, 10);
                 
                 if (plotInt >= 1 && plotInt <= 14) {
-                    labelA.innerText = dimParts[1].trim(); 
-                    labelB.innerText = dimParts[0].trim(); 
-                } else if (plotData.facing === "West" || plotData.facing === "East") {
                     labelA.innerText = dimParts[0].trim(); 
                     labelB.innerText = dimParts[1].trim(); 
                 } else {
-                    labelA.innerText = dimParts[0].trim();
-                    labelB.innerText = dimParts[1].trim();
+                    labelA.innerText = dimParts[1].trim(); 
+                    labelB.innerText = dimParts[0].trim(); 
                 }
 
                 labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
@@ -1864,7 +1862,7 @@
         });
 
         dragToolbar.addEventListener('pointerup', function(e) {
-            if (!isDraggingToolbar, !isDraggingToolbar) return;
+            if (!isDraggingToolbar) return;
             isDraggingToolbar = false;
             dragToolbar.style.transition = 'max-height 0.3s ease, padding 0.3s ease';
             dragToolbar.releasePointerCapture(e.pointerId);
