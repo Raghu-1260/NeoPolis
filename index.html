@@ -1211,7 +1211,7 @@
             }
         }
 
-        // Updated Hero Mesh Scaler (Targeted West-Only Scale Flip)
+        // Updated Hero Mesh Scaler (Strictly West-Only Scale Flip)
         function focusSelectedPlot(num) {
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
             selectedPlotNum = query;
@@ -1252,11 +1252,11 @@
                         scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
                     }
 
-                    // Flips isolated to West plots strictly
+                    // STRICT WEST-ONLY SCALING (East & North Plots left untouched)
                     if (dbData.facing === "West") {
                         scaleX = -scaleX; 
                     } else if (dbData.facing === "East") {
-                        scaleX = scaleX;
+                        scaleX = scaleX; // No flip or extra scale applied to East plots
                     }
 
                     heroGroup.position.set(center.x, center.y + 2.2, center.z);
