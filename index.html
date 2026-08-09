@@ -774,37 +774,49 @@
             "121": { dim: "112'2\" x 57'1\"", area: "701.11", facing: "East", rot: 0, status: "HOLD", owner: "Landowner Share" }
         };
 
-        for (let i = 1; i <= 121; i++) {
-            const key = String(i);
-            if (!plotDatabase[key]) {
-                let dim = "33'0\" x 50'0\"";
-                let area = "183.36";
+        // Database Loop with Updated Directional Mapping & Hero Scale Swapping
+for (let i = 1; i <= 121; i++) {
+    const key = String(i);
+    if (!plotDatabase[key]) {
+        let dim = "33'0\" x 50'0\"";
+        let area = "183.36";
 
-                if (i >= 28 && i <= 41) {
-                    dim = "33'0\" x 51'3\""; area = "188.00";
-                } else if (i >= 67 && i <= 105) {
-                    dim = "33'0\" x 52'6\""; area = "192.51";
-                }
-
-                plotDatabase[key] = { dim: dim, area: area, status: "AVAILABLE", owner: "Unassigned" };
-            }
-
-            if (i >= 1 && i <= 14) {
-                plotDatabase[key].facing = "East"; plotDatabase[key].rot = 90; plotDatabase[key].swapScale = true;
-            } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
-                plotDatabase[key].facing = "East"; plotDatabase[key].rot = 0;
-            } else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
-                plotDatabase[key].facing = "West"; plotDatabase[key].rot = 180;
-            }
-
-            if (MORTGAGE_LANDS.includes(key)) {
-                plotDatabase[key].status = "HOLD";
-                plotDatabase[key].owner = "Mortgaged to APCRDA";
-            } else if (key === "119") {
-                plotDatabase[key].status = "HOLD";
-                plotDatabase[key].owner = "Amenity / Utility Space";
-            }
+        if (i >= 28 && i <= 41) {
+            dim = "33'0\" x 51'3\""; area = "188.00";
+        } else if (i >= 67 && i <= 105) {
+            dim = "33'0\" x 52'6\""; area = "192.51";
         }
+
+        plotDatabase[key] = { dim: dim, area: area, status: "AVAILABLE", owner: "Unassigned" };
+    }
+
+    // 1. Plots 1 to 14: North Facing, Turned Towards South, Swapped Dimensions
+    if (i >= 1 && i <= 14) {
+        plotDatabase[key].facing = "North";
+        plotDatabase[key].rot = 270; // Rotates hero plot to face South road
+        plotDatabase[key].swapScale = true; // Swaps width and length for accurate hero mesh bounds
+    } 
+    // 2. West Columns (Plots 15-27, 41-53, 67-79, 93-105, 116-121)
+    else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
+        plotDatabase[key].facing = "West";
+        plotDatabase[key].rot = 180;
+        plotDatabase[key].swapScale = false;
+    } 
+    // 3. East Columns (Plots 28-40, 54-66, 80-92, 106-115)
+    else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
+        plotDatabase[key].facing = "East";
+        plotDatabase[key].rot = 0;
+        plotDatabase[key].swapScale = false;
+    }
+
+    if (MORTGAGE_LANDS.includes(key)) {
+        plotDatabase[key].status = "HOLD";
+        plotDatabase[key].owner = "Mortgaged to APCRDA";
+    } else if (key === "119") {
+        plotDatabase[key].status = "HOLD";
+        plotDatabase[key].owner = "Amenity / Utility Space";
+    }
+}
         
         function updateDynamicDate() {
             const options = { day: '2-digit', month: 'short', year: 'numeric' };
@@ -1281,35 +1293,48 @@
                 const dbData = plotDatabase[query] || { area: "251", dim: "34.7' x 65.0'", facing: "North", status: "AVAILABLE", owner: "Unassigned" };
 
                 if (heroGroup) {
-                    let scaleX, scaleZ;
-                    if (dbData.swapScale) {
-                        scaleX = targetSize.z / Math.max(heroBaseBoxSize.x, 0.001);
-                        scaleZ = targetSize.x / Math.max(heroBaseBoxSize.z, 0.001);
-                    } else {
-                        scaleX = targetSize.x / Math.max(heroBaseBoxSize.x, 0.001);
-                        scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
-                    }
+    let scaleX, scaleZ;
 
-                    if (dbData.facing === "East") scaleX = -scaleX;
+    // Dimension swapping logic
+    if (dbData.swapScale) {
+        scaleX = targetSize.z / Math.max(heroBaseBoxSize.x, 0.001);
+        scaleZ = targetSize.x / Math.max(heroBaseBoxSize.z, 0.001);
+    } else {
+        scaleX = targetSize.x / Math.max(heroBaseBoxSize.x, 0.001);
+        scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
+    }
 
-                    heroGroup.position.set(center.x, center.y + 2.2, center.z);
-                    if (dbData.rot !== undefined) heroGroup.rotation.set(0, THREE.MathUtils.degToRad(dbData.rot), 0);
-                    
-                    heroGroup.visible = true;
-                    if (pinDropperMesh) pinDropperMesh.scale.set(0.45 / Math.abs(scaleX), 0.45, 0.45 / scaleZ);
-                    heroGroup.scale.set(0, 0, 0);
+    // Directional orientation flips
+    if (dbData.facing === "West") {
+        scaleX = -scaleX;
+    }
 
-                    gsap.to(heroGroup.scale, { 
-                        x: -scaleX, y: 1.0, z: -scaleZ, duration: 0.5, ease: "back.out(1.4)",
-                        onComplete: function() {
-                            allowDimensionDraw = true;
-                            document.getElementById('dimensionSvg').style.display = 'block';
-                            document.getElementById('dimSideA').style.display = 'block';
-                            document.getElementById('dimSideB').style.display = 'block';
-                            document.getElementById('heroPlotBadge').style.display = 'block';
-                        }
-                    });
-                }
+    heroGroup.position.set(center.x, center.y + 2.2, center.z);
+    
+    if (dbData.rot !== undefined) {
+        heroGroup.rotation.set(0, THREE.MathUtils.degToRad(dbData.rot), 0);
+    }
+    
+    heroGroup.visible = true;
+
+    if (pinDropperMesh) {
+        pinDropperMesh.scale.set(0.45 / Math.abs(scaleX), 0.45, 0.45 / Math.abs(scaleZ));
+    }
+
+    heroGroup.scale.set(0, 0, 0);
+
+    // GSAP Pop-In Animation
+    gsap.to(heroGroup.scale, { 
+        x: -scaleX, y: 1.0, z: -scaleZ, duration: 0.5, ease: "back.out(1.4)",
+        onComplete: function() {
+            allowDimensionDraw = true;
+            document.getElementById('dimensionSvg').style.display = 'block';
+            document.getElementById('dimSideA').style.display = 'block';
+            document.getElementById('dimSideB').style.display = 'block';
+            document.getElementById('heroPlotBadge').style.display = 'block';
+        }
+    });
+}
 
                 updatePlotColorsFromDB();
                 map.setPaintProperty('esri-satellite-layer', 'raster-opacity', 0.25);
