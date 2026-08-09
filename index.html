@@ -928,19 +928,28 @@
 
         // Image-driven Loading Banner ("NeoPollis Name.png") scaled to 50% layout footprint
         // Image-driven Ground Loading Banner ("NeoPollis Name.png")
+// Image-driven Ground Loading Banner ("NeoPollis Name.png") - Aspect Ratio Preserved & Scaled Larger
 function createGroundImageLoader(scene) {
     const textureLoader = new THREE.TextureLoader();
     
-    // URL-encoded path to prevent network fetch failures on file spaces
     textureLoader.load('assets/images/NeoPollis%20Name.png?v=' + Date.now(), (tex) => {
-        tex.needsUpdate = true; // Force Three.js GPU texture refresh
+        tex.needsUpdate = true;
         
-        const geo = new THREE.PlaneGeometry(60, 24); // 50% site layout scale
+        // Calculate exact original image aspect ratio
+        const imgWidth = tex.image.width || 1024;
+        const imgHeight = tex.image.height || 256;
+        const aspectRatio = imgWidth / imgHeight;
+
+        // Scale plane up larger while preserving exact aspect ratio
+        const planeHeight = 45; // Increased ground scale
+        const planeWidth = planeHeight * aspectRatio;
+
+        const geo = new THREE.PlaneGeometry(planeWidth, planeHeight);
         const mat = new THREE.MeshBasicMaterial({ 
             map: tex, 
             side: THREE.DoubleSide, 
             transparent: true,
-            depthTest: false // Keeps loader visible on top of terrain until GLB arrives
+            depthTest: false // Ensures logo renders prominently on top of terrain during GLB load
         });
 
         groundTextGroup = new THREE.Mesh(geo, mat);
@@ -948,12 +957,11 @@ function createGroundImageLoader(scene) {
         groundTextGroup.position.set(0, 0.5, 0);
         scene.add(groundTextGroup);
 
-        // Force MapLibre to redraw canvas immediately when image finishes downloading
         if (map) map.triggerRepaint();
     }, undefined, (err) => {
         console.warn("Ground loading image fetch failed, rendering fallback canvas:", err);
         
-        // Canvas Fallback if image file is missing or misspelled
+        // Canvas Fallback maintaining exact 4:1 ratio
         const canvas = document.createElement('canvas');
         canvas.width = 1024; canvas.height = 256;
         const ctx = canvas.getContext('2d');
@@ -969,7 +977,7 @@ function createGroundImageLoader(scene) {
         ctx.fillText("LOADING MASTER PLAN...", 512, 185);
 
         const tex = new THREE.CanvasTexture(canvas);
-        const geo = new THREE.PlaneGeometry(60, 18);
+        const geo = new THREE.PlaneGeometry(100, 25); // Proportionate large fallback plane
         const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true });
 
         groundTextGroup = new THREE.Mesh(geo, mat);
