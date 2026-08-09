@@ -1272,9 +1272,13 @@
                     }
 
                     heroGroup.position.set(center.x, center.y + 2.2, center.z);
-                    if (dbData.rot !== undefined) {
-                        heroGroup.rotation.set(0, THREE.MathUtils.degToRad(dbData.rot), 0);
-                    }
+if (dbData.rot !== undefined) {
+    let finalRotation = dbData.rot;
+    if (dbData.facing === "West") {
+        finalRotation += 0; // Adds 180 degrees only to West-facing plots
+    }
+    heroGroup.rotation.set(0, THREE.MathUtils.degToRad(finalRotation), 0);
+}
 
                     heroGroup.visible = true;
 
