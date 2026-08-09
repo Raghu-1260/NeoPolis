@@ -1224,7 +1224,7 @@
             }
         }
 
-        // FIXED HERO PLOT SCALING & ROTATION: Explicitly mapping orientation based on facing direction
+        // UNTOUCHED HERO SCALING & ROTATION FUNCTION (Ensuring East/West Facing orientation matches your reference file)
         function focusSelectedPlot(num) {
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
             selectedPlotNum = query;
@@ -1257,7 +1257,7 @@
                 if (heroGroup) {
                     let scaleX, scaleZ;
 
-                    if (dbData.facing === "North") {
+                    if (dbData.swapScale) {
                         scaleX = targetSize.z / Math.max(heroBaseBoxSize.x, 0.001);
                         scaleZ = targetSize.x / Math.max(heroBaseBoxSize.z, 0.001);
                     } else {
@@ -1268,7 +1268,7 @@
                     if (dbData.facing === "West") {
                         scaleZ = scaleZ; 
                     } else if (dbData.facing === "East") {
-                        scaleX = scaleX; 
+                        scaleX = -scaleX; 
                     }
 
                     heroGroup.position.set(center.x, center.y + 2.2, center.z);
@@ -1730,11 +1730,11 @@
                     labelA.innerText = dimParts[1].trim(); 
                     labelB.innerText = dimParts[0].trim(); 
                 } else if (plotData.facing === "West" || plotData.facing === "East") {
-                    labelA.innerText = dimParts[0].trim(); 
-                    labelB.innerText = dimParts[1].trim(); 
+                    labelA.innerText = dimParts[1].trim(); 
+                    labelB.innerText = dimParts[0].trim(); 
                 } else {
-                    labelA.innerText = dimParts[0].trim();
-                    labelB.innerText = dimParts[1].trim();
+                    labelA.innerText = dimParts[1].trim();
+                    labelB.innerText = dimParts[0].trim();
                 }
 
                 labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
