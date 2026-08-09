@@ -389,8 +389,8 @@
         <line id="lineL" x1="0" y1="0" x2="0" y2="0" stroke="#ffffff" stroke-width="2.5" marker-start="url(#tick)" marker-end="url(#tick)" />
     </svg>
 
-    <div id="dimSideA" class="dimension-label">30.0'</div>
-    <div id="dimSideB" class="dimension-label">50.0'</div>
+    <div id="dimSideA" class="dimension-label">33.0'</div>
+    <div id="dimSideB" class="dimension-label">52.5'</div>
 
     <div id="plotOverlayContainer"></div>
 
@@ -713,7 +713,7 @@
 
         let galleryImages = JSON.parse(localStorage.getItem('neopolis_gallery_images')) || defaultGallery;
 
-        // PDF Dimensions & Exact Directional Rotations (Explicit 30'0" Width Scaling for Plots 15-105)
+        // PDF Dimensions for Plots 15 to 112: 33'0" short side x 52'6" long side
         let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {
             "1": { dim: "34'9\" x 65'3\"", area: "250.87", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
             "2": { dim: "35'0\" x 65'3\"", area: "252.19", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
@@ -737,49 +737,38 @@
             "121": { dim: "112'2\" x 57'1\"", area: "701.11", facing: "East", rot: 0, status: "HOLD", owner: "Landowner Share" }
         };
 
-        // Corrected PDF Database Loop (33'0" Standard Widths & 36'0" Corner Plots)
-for (let i = 1; i <= 121; i++) {
-    const key = String(i);
-    if (!plotDatabase[key]) {
-        let width = "33'0\"";
-        let length = "50'0\"";
-        let area = "183.36";
+        for (let i = 1; i <= 121; i++) {
+            const key = String(i);
+            if (!plotDatabase[key]) {
+                let width = "33'0\"";
+                let length = "52'6\"";
+                let area = "192.51";
 
-        // Depth assignments by column
-        if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66)) {
-            length = "51'3\""; area = "188.00";
-        } else if ((i >= 67 && i <= 105)) {
-            length = "52'6\""; area = "192.51";
+                // Corner plot width overrides (36'0")
+                if (["15", "40", "41", "66", "67", "92", "93", "105"].includes(key)) {
+                    width = "36'0\"";
+                    area = "210.24";
+                }
+
+                plotDatabase[key] = { dim: `${width} x ${length}`, area: area, status: "AVAILABLE", owner: "Unassigned" };
+            }
+
+            if (i >= 1 && i <= 14) {
+                plotDatabase[key].facing = "North"; plotDatabase[key].rot = 90; plotDatabase[key].swapScale = true;
+            } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
+                plotDatabase[key].facing = "West"; plotDatabase[key].rot = 180; plotDatabase[key].swapScale = false;
+            } else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
+                plotDatabase[key].facing = "East"; plotDatabase[key].rot = 0; plotDatabase[key].swapScale = false;
+            }
+
+            if (MORTGAGE_LANDS.includes(key)) {
+                plotDatabase[key].status = "HOLD";
+                plotDatabase[key].owner = "Mortgaged to APCRDA";
+            } else if (key === "119") {
+                plotDatabase[key].status = "HOLD";
+                plotDatabase[key].owner = "Amenity / Utility Space";
+            }
         }
-
-        // Corner Plot Width Overrides (36'0" Width)
-        if (["15", "40", "41", "66", "67", "92", "93", "105"].includes(key)) {
-            width = "36'0\"";
-            if (length === "50'0\"") area = "200.14";
-            else if (length === "51'3\"") area = "205.16";
-            else if (length === "52'6\"") area = "210.24";
-        }
-
-        plotDatabase[key] = { dim: `${width} x ${length}`, area: area, status: "AVAILABLE", owner: "Unassigned" };
-    }
-
-    // Facing & Rotation Rules according to plot row/column
-    if (i >= 1 && i <= 14) {
-        plotDatabase[key].facing = "North"; plotDatabase[key].rot = 90; plotDatabase[key].swapScale = true;
-    } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
-        plotDatabase[key].facing = "West"; plotDatabase[key].rot = 180; plotDatabase[key].swapScale = false;
-    } else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
-        plotDatabase[key].facing = "East"; plotDatabase[key].rot = 0; plotDatabase[key].swapScale = false;
-    }
-
-    if (MORTGAGE_LANDS.includes(key)) {
-        plotDatabase[key].status = "HOLD";
-        plotDatabase[key].owner = "Mortgaged to APCRDA";
-    } else if (key === "119") {
-        plotDatabase[key].status = "HOLD";
-        plotDatabase[key].owner = "Amenity / Utility Space";
-    }
-}
         
         function updateDynamicDate() {
             const options = { day: '2-digit', month: 'short', year: 'numeric' };
@@ -1221,6 +1210,7 @@ for (let i = 1; i <= 121; i++) {
             }
         }
 
+        // Updated Hero Mesh Scaler (East Flips Short Side, West Flips Long Depth Side)
         function focusSelectedPlot(num) {
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
             selectedPlotNum = query;
@@ -1248,10 +1238,11 @@ for (let i = 1; i <= 121; i++) {
                 const center = new THREE.Vector3();
                 box.getCenter(center);
 
-                const dbData = plotDatabase[query] || { area: "166.67", dim: "30.0' x 50.0'", facing: "West", status: "AVAILABLE", owner: "Unassigned" };
+                const dbData = plotDatabase[query] || { area: "192.51", dim: "33.0' x 52.5'", facing: "West", status: "AVAILABLE", owner: "Unassigned" };
 
                 if (heroGroup) {
                     let scaleX, scaleZ;
+
                     if (dbData.swapScale) {
                         scaleX = targetSize.z / Math.max(heroBaseBoxSize.x, 0.001);
                         scaleZ = targetSize.x / Math.max(heroBaseBoxSize.z, 0.001);
@@ -1260,17 +1251,22 @@ for (let i = 1; i <= 121; i++) {
                         scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
                     }
 
-                    if (dbData.facing === "West") scaleX = -scaleX;
+                    // Flips requested by user:
+                    if (dbData.facing === "East") {
+                        scaleX = -scaleX; // East facings scale -1 along short side (X)
+                    } else if (dbData.facing === "West") {
+                        scaleZ = -scaleZ; // West facings scale -1 along long side (Z)
+                    }
 
                     heroGroup.position.set(center.x, center.y + 2.2, center.z);
                     if (dbData.rot !== undefined) heroGroup.rotation.set(0, THREE.MathUtils.degToRad(dbData.rot), 0);
                     
                     heroGroup.visible = true;
-                    if (pinDropperMesh) pinDropperMesh.scale.set(0.45 / Math.abs(scaleX), 0.45, 0.45 / scaleZ);
+                    if (pinDropperMesh) pinDropperMesh.scale.set(0.45 / Math.abs(scaleX), 0.45, 0.45 / Math.abs(scaleZ));
                     heroGroup.scale.set(0, 0, 0);
 
                     gsap.to(heroGroup.scale, { 
-                        x: -scaleX, y: 1.0, z: -scaleZ, duration: 0.5, ease: "back.out(1.4)",
+                        x: scaleX, y: 1.0, z: scaleZ, duration: 0.5, ease: "back.out(1.4)",
                         onComplete: function() {
                             allowDimensionDraw = true;
                             document.getElementById('dimensionSvg').style.display = 'block';
@@ -1310,7 +1306,7 @@ for (let i = 1; i <= 121; i++) {
 
         function updatePlotUI(plotNum) {
             document.getElementById('plotId').innerText = `Plot ${plotNum}`;
-            const plotData = plotDatabase[plotNum] || { area: '166.67', dim: "30.0' x 50.0'", facing: 'West', status: 'AVAILABLE', owner: 'Unassigned' };
+            const plotData = plotDatabase[plotNum] || { area: '192.51', dim: "33.0' x 52.5'", facing: 'West', status: 'AVAILABLE', owner: 'Unassigned' };
 
             document.getElementById('plotArea').innerText = `${plotData.area} Sq.Yds`;
             document.getElementById('plotDim').innerText = plotData.dim;
@@ -1672,65 +1668,64 @@ for (let i = 1; i <= 121; i++) {
         }
 
         function updateDimensionCallouts() {
-    if (!heroGroup || !heroGroup.visible || !selectedPlotNum || !allowDimensionDraw) return;
+            if (!heroGroup || !heroGroup.visible || !selectedPlotNum || !allowDimensionDraw) return;
 
-    heroGroup.updateMatrixWorld(true);
-    const box = new THREE.Box3().setFromObject(heroGroup);
+            heroGroup.updateMatrixWorld(true);
+            const box = new THREE.Box3().setFromObject(heroGroup);
 
-    const topY = box.min.y + 0.2;
-    const corners = [
-        new THREE.Vector3(box.min.x, topY, box.max.z),
-        new THREE.Vector3(box.max.x, topY, box.max.z),
-        new THREE.Vector3(box.max.x, topY, box.min.z)
-    ];
+            const topY = box.min.y + 0.2;
+            const corners = [
+                new THREE.Vector3(box.min.x, topY, box.max.z),
+                new THREE.Vector3(box.max.x, topY, box.max.z),
+                new THREE.Vector3(box.max.x, topY, box.min.z)
+            ];
 
-    const screenPoints = corners.map(v => {
-        const clone = v.clone().project(customThreeLayer.camera);
-        return {
-            x: (clone.x * 0.5 + 0.5) * map.getCanvas().clientWidth,
-            y: (-(clone.y * 0.5) + 0.5) * map.getCanvas().clientHeight
-        };
-    });
+            const screenPoints = corners.map(v => {
+                const clone = v.clone().project(customThreeLayer.camera);
+                return {
+                    x: (clone.x * 0.5 + 0.5) * map.getCanvas().clientWidth,
+                    y: (-(clone.y * 0.5) + 0.5) * map.getCanvas().clientHeight
+                };
+            });
 
-    const lineW = document.getElementById('lineW'), lineL = document.getElementById('lineL');
-    if (lineW && lineL) {
-        lineW.setAttribute('x1', screenPoints[0].x); lineW.setAttribute('y1', screenPoints[0].y);
-        lineW.setAttribute('x2', screenPoints[1].x); lineW.setAttribute('y2', screenPoints[1].y);
-        lineL.setAttribute('x1', screenPoints[1].x); lineL.setAttribute('y1', screenPoints[1].y);
-        lineL.setAttribute('x2', screenPoints[2].x); lineL.setAttribute('y2', screenPoints[2].y);
-    }
+            const lineW = document.getElementById('lineW'), lineL = document.getElementById('lineL');
+            if (lineW && lineL) {
+                lineW.setAttribute('x1', screenPoints[0].x); lineW.setAttribute('y1', screenPoints[0].y);
+                lineW.setAttribute('x2', screenPoints[1].x); lineW.setAttribute('y2', screenPoints[1].y);
+                lineL.setAttribute('x1', screenPoints[1].x); lineL.setAttribute('y1', screenPoints[1].y);
+                lineL.setAttribute('x2', screenPoints[2].x); lineL.setAttribute('y2', screenPoints[2].y);
+            }
 
-    const labelA = document.getElementById('dimSideA'), labelB = document.getElementById('dimSideB');
-    const plotData = plotDatabase[selectedPlotNum] || { dim: "33'0\" x 52'6\"", facing: "West" };
-    const dimParts = plotData.dim.split('x');
+            const labelA = document.getElementById('dimSideA'), labelB = document.getElementById('dimSideB');
+            const plotData = plotDatabase[selectedPlotNum] || { dim: "33'0\" x 52'6\"", facing: "West" };
+            const dimParts = plotData.dim.split('x');
 
-    if (labelA && labelB && dimParts.length === 2) {
-        const plotInt = parseInt(selectedPlotNum, 10);
-        
-        // North plots (1-14)
-        if (plotInt >= 1 && plotInt <= 14) {
-            labelA.innerText = dimParts[1].trim(); 
-            labelB.innerText = dimParts[0].trim(); 
-        } else {
-            labelA.innerText = dimParts[0].trim(); // Front Road Width (33.0' or 36.0')
-            labelB.innerText = dimParts[1].trim(); // Side Plot Depth (50.0', 51.3', or 52.5')
+            if (labelA && labelB && dimParts.length === 2) {
+                const plotInt = parseInt(selectedPlotNum, 10);
+                
+                if (plotInt >= 1 && plotInt <= 14) {
+                    labelA.innerText = dimParts[1].trim(); 
+                    labelB.innerText = dimParts[0].trim(); 
+                } else {
+                    labelA.innerText = dimParts[0].trim(); // Short Side Width (33.0' / 36.0')
+                    labelB.innerText = dimParts[1].trim(); // Long Side Depth (52.5')
+                }
+
+                labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
+                labelA.style.top = `${(screenPoints[0].y + screenPoints[1].y) / 2 - 10}px`;
+                labelB.style.left = `${(screenPoints[1].x + screenPoints[2].x) / 2 + 15}px`;
+                labelB.style.top = `${(screenPoints[1].y + screenPoints[2].y) / 2}px`;
+            }
+
+            const centerVector = new THREE.Vector3();
+            box.getCenter(centerVector);
+            const centerScreen = centerVector.project(customThreeLayer.camera);
+            const badgeEl = document.getElementById('heroPlotBadge');
+            if (badgeEl) {
+                badgeEl.style.left = `${(centerScreen.x * 0.5 + 0.5) * map.getCanvas().clientWidth}px`;
+                badgeEl.style.top = `${(-(centerScreen.y * 0.5) + 0.5) * map.getCanvas().clientHeight - 30}px`;
+            }
         }
-
-        labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
-        labelA.style.top = `${(screenPoints[0].y + screenPoints[1].y) / 2 - 10}px`;
-        labelB.style.left = `${(screenPoints[1].x + screenPoints[2].x) / 2 + 15}px`;
-        labelB.style.top = `${(screenPoints[1].y + screenPoints[2].y) / 2}px`;
-    }
-
-    const centerVector = new THREE.Vector3();
-    box.getCenter(centerVector);
-    const centerScreen = centerVector.project(customThreeLayer.camera);
-    const badgeEl = document.getElementById('heroPlotBadge');
-    if (badgeEl) {
-        badgeEl.style.left = `${(centerScreen.x * 0.5 + 0.5) * map.getCanvas().clientWidth}px`;
-        badgeEl.style.top = `${(-(centerScreen.y * 0.5) + 0.5) * map.getCanvas().clientHeight - 30}px`;
-    }
-}
 
         function openParkPlanModal() { renderGalleryGrid(); document.getElementById('parkModal').style.display = 'flex'; }
         function closeParkPlanModal() { document.getElementById('parkModal').style.display = 'none'; }
