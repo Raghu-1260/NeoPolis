@@ -389,8 +389,8 @@
         <line id="lineL" x1="0" y1="0" x2="0" y2="0" stroke="#ffffff" stroke-width="2.5" marker-start="url(#tick)" marker-end="url(#tick)" />
     </svg>
 
-    <div id="dimSideA" class="dimension-label">34.7'</div>
-    <div id="dimSideB" class="dimension-label">65.0'</div>
+    <div id="dimSideA" class="dimension-label">30.0'</div>
+    <div id="dimSideB" class="dimension-label">50.0'</div>
 
     <div id="plotOverlayContainer"></div>
 
@@ -415,13 +415,12 @@
             <div class="widget-item">📅 <strong id="currentDateDisplay">Loading...</strong></div>
         </div>
 
-        <!-- Top Right Auth Dropdown Widget with Zen Arch Logo -->
+        <!-- Top Right Auth Dropdown Widget -->
         <div class="auth-container">
             <button class="auth-btn" onclick="toggleAuthDropdown()">
                 👤 <span id="authBtnText">LOGIN</span>
             </button>
             <div class="auth-dropdown glass-card" id="authDropdown">
-                <!-- Zen Arch Company Branding above Login Portal -->
                 <img src="assets/images/ZenArch_Name.png" alt="Zen Arch Logo" class="zenarch-portal-logo">
                 <h4 id="authFormTitle">ACCOUNT LOGIN</h4>
                 
@@ -685,43 +684,12 @@
 
         let progressCanvas = null, progressTexture = null;
 
-        // PARK AMENITIES HOTSPOT DATA mapped visually North to South (facing Plots 27 down to 15)
         const PARK_AMENITIES_DATA = [
-            { 
-                id: "cricket_pitch", 
-                title: "Cricket Pitch & Ground", 
-                coords: [28, 1.5, -35], 
-                img: "assets/images/gallery/cricket_pitch.jpg", 
-                desc: "Net cricket pitch with green lawn area." 
-            },
-            { 
-                id: "badminton_court", 
-                title: "Badminton / Pickleball Courts", 
-                coords: [28, 1.5, -22], 
-                img: "assets/images/gallery/badminton_court.jpg", 
-                desc: "Outdoor dual sports courts with night lighting." 
-            },
-            { 
-                id: "amphitheater", 
-                title: "Circular Open Amphitheater", 
-                coords: [28, 1.5, -10], 
-                img: "assets/images/gallery/amphitheater.jpg", 
-                desc: "Tiered seating outdoor amphitheater for community gatherings." 
-            },
-            { 
-                id: "children_play", 
-                title: "Children's Play Area & Swings", 
-                coords: [28, 1.5, 8], 
-                img: "assets/images/gallery/play_area.jpg", 
-                desc: "Multi-play slides, swings, and rubberized safety play park." 
-            },
-            { 
-                id: "gazebo_fountain", 
-                title: "Pergola Gazebo & Water Fountain", 
-                coords: [28, 1.5, 28], 
-                img: "assets/images/gallery/gazebo.jpg", 
-                desc: "Shaded wooden pergola gazebo accompanied by a circular water fountain plaza." 
-            }
+            { id: "cricket_pitch", title: "Cricket Pitch & Ground", coords: [28, 1.5, -35], img: "assets/images/gallery/cricket_pitch.jpg", desc: "Net cricket pitch with green lawn area." },
+            { id: "badminton_court", title: "Badminton / Pickleball Courts", coords: [28, 1.5, -22], img: "assets/images/gallery/badminton_court.jpg", desc: "Outdoor dual sports courts with night lighting." },
+            { id: "amphitheater", title: "Circular Open Amphitheater", coords: [28, 1.5, -10], img: "assets/images/gallery/amphitheater.jpg", desc: "Tiered seating outdoor amphitheater for community gatherings." },
+            { id: "children_play", title: "Children's Play Area & Swings", coords: [28, 1.5, 8], img: "assets/images/gallery/play_area.jpg", desc: "Multi-play slides, swings, and rubberized safety play park." },
+            { id: "gazebo_fountain", title: "Pergola Gazebo & Water Fountain", coords: [28, 1.5, 28], img: "assets/images/gallery/gazebo.jpg", desc: "Shaded wooden pergola gazebo accompanied by a circular water fountain plaza." }
         ];
 
         let parkPinsGroup = new THREE.Group();
@@ -734,7 +702,6 @@
             "sales": { pass: "sales123", role: "sales" }
         };
 
-        // DEFAULT GALLERY LIST DIRECTED TO ASSETS/IMAGES/GALLERY/
         let defaultGallery = [
             { id: 1, title: "Park Layout Plan", src: "assets/images/gallery/park_plan.jpg" },
             { id: 2, title: "Project Entrance View", src: "assets/images/Logo.png" },
@@ -746,26 +713,22 @@
 
         let galleryImages = JSON.parse(localStorage.getItem('neopolis_gallery_images')) || defaultGallery;
 
-        // PDF Dimensions & Exact Directional Rotations (Preserved Statuses)
+        // PDF Dimensions & Exact Directional Rotations (Explicit 30'0" Width Scaling for Plots 15-105)
         let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {
-            "1": { dim: "34'9\" x 65'3\"", area: "250.87", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "2": { dim: "35'0\" x 65'3\"", area: "252.19", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "3": { dim: "72'3\" x 64'6\"", area: "504.06", facing: "East", rot: 90, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
-            "4": { dim: "35'0\" x 64'4\"", area: "250.00", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "5": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "6": { dim: "74'5\" x 64'2\"", area: "529.82", facing: "East", rot: 90, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
-            "7": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "8": { dim: "35'0\" x 64'5\"", area: "250.80", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "9": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "10": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "11": { dim: "33'0\" x 65'2\"", area: "240.00", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "12": { dim: "74'8\" x 65'4\"", area: "541.41", facing: "East", rot: 90, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
-            "13": { dim: "50'0\" x 64'8\"", area: "358.47", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "14": { dim: "44'3\" x 61'7\"", area: "315.00", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "15": { dim: "36'0\" x 50'0\"", area: "200.14", facing: "East", rot: 0, status: "AVAILABLE", owner: "Unassigned" },
-            "65": { dim: "36'0\" x 52'6\"", area: "210.11", facing: "West", rot: 180, status: "HOLD", owner: "Mortgaged to APCRDA" },
-            "66": { dim: "36'0\" x 52'6\"", area: "210.11", facing: "West", rot: 180, status: "HOLD", owner: "Mortgaged to APCRDA" },
-            "67": { dim: "33'0\" x 52'6\"", area: "192.51", facing: "East", rot: 0, status: "HOLD", owner: "Mortgaged to APCRDA" },
+            "1": { dim: "34'9\" x 65'3\"", area: "250.87", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "2": { dim: "35'0\" x 65'3\"", area: "252.19", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "3": { dim: "72'3\" x 64'6\"", area: "504.06", facing: "North", rot: 90, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
+            "4": { dim: "35'0\" x 64'4\"", area: "250.00", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "5": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "6": { dim: "74'5\" x 64'2\"", area: "529.82", facing: "North", rot: 90, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
+            "7": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "8": { dim: "35'0\" x 64'5\"", area: "250.80", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "9": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "10": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "11": { dim: "33'0\" x 65'2\"", area: "240.00", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "12": { dim: "74'8\" x 65'4\"", area: "541.41", facing: "North", rot: 90, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
+            "13": { dim: "50'0\" x 64'8\"", area: "358.47", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "14": { dim: "44'3\" x 61'7\"", area: "315.00", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
             "116": { dim: "92'11\" x 49'6\"", area: "511.00", facing: "West", rot: 180, status: "AVAILABLE", owner: "Unassigned" },
             "117": { dim: "95'11\" x 49'6\"", area: "535.89", facing: "East", rot: 0, status: "HOLD", owner: "Mortgaged to APCRDA" },
             "118": { dim: "102'4\" x 58'0\"", area: "648.63", facing: "East", rot: 0, status: "HOLD", owner: "Landowner Share" },
@@ -774,50 +737,37 @@
             "121": { dim: "112'2\" x 57'1\"", area: "701.11", facing: "East", rot: 0, status: "HOLD", owner: "Landowner Share" }
         };
 
-        // Database Loop with Updated Directional Mapping & Hero Scale Swapping
-for (let i = 1; i <= 121; i++) {
-    const key = String(i);
-    if (!plotDatabase[key]) {
-        let dim = "33'0\" x 50'0\"";
-        let area = "183.36";
+        for (let i = 1; i <= 121; i++) {
+            const key = String(i);
+            if (!plotDatabase[key]) {
+                let dim = "30'0\" x 50'0\"";
+                let area = "166.67";
 
-        if (i >= 28 && i <= 41) {
-            dim = "33'0\" x 51'3\""; area = "188.00";
-        } else if (i >= 67 && i <= 105) {
-            dim = "33'0\" x 52'6\""; area = "192.51";
+                if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66)) {
+                    dim = "30'0\" x 51'3\""; area = "170.83";
+                } else if ((i >= 67 && i <= 105)) {
+                    dim = "30'0\" x 52'6\""; area = "175.00";
+                }
+
+                plotDatabase[key] = { dim: dim, area: area, status: "AVAILABLE", owner: "Unassigned" };
+            }
+
+            if (i >= 1 && i <= 14) {
+                plotDatabase[key].facing = "North"; plotDatabase[key].rot = 90; plotDatabase[key].swapScale = true;
+            } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
+                plotDatabase[key].facing = "West"; plotDatabase[key].rot = 180; plotDatabase[key].swapScale = false;
+            } else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
+                plotDatabase[key].facing = "East"; plotDatabase[key].rot = 0; plotDatabase[key].swapScale = false;
+            }
+
+            if (MORTGAGE_LANDS.includes(key)) {
+                plotDatabase[key].status = "HOLD";
+                plotDatabase[key].owner = "Mortgaged to APCRDA";
+            } else if (key === "119") {
+                plotDatabase[key].status = "HOLD";
+                plotDatabase[key].owner = "Amenity / Utility Space";
+            }
         }
-
-        plotDatabase[key] = { dim: dim, area: area, status: "AVAILABLE", owner: "Unassigned" };
-    }
-
-    // 1. Plots 1 to 14: North Facing, Turned Towards South, Swapped Dimensions
-    // 1. Plots 1 to 14: North Row Rotation Correction
-if (i >= 1 && i <= 14) {
-    plotDatabase[key].facing = "North";
-    plotDatabase[key].rot = 90; // Rotated +180° from 270° -> 90°
-    plotDatabase[key].swapScale = true;
-} 
-    // 2. West Columns (Plots 15-27, 41-53, 67-79, 93-105, 116-121)
-    else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
-        plotDatabase[key].facing = "West";
-        plotDatabase[key].rot = 180;
-        plotDatabase[key].swapScale = false;
-    } 
-    // 3. East Columns (Plots 28-40, 54-66, 80-92, 106-115)
-    else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
-        plotDatabase[key].facing = "East";
-        plotDatabase[key].rot = 0;
-        plotDatabase[key].swapScale = false;
-    }
-
-    if (MORTGAGE_LANDS.includes(key)) {
-        plotDatabase[key].status = "HOLD";
-        plotDatabase[key].owner = "Mortgaged to APCRDA";
-    } else if (key === "119") {
-        plotDatabase[key].status = "HOLD";
-        plotDatabase[key].owner = "Amenity / Utility Space";
-    }
-}
         
         function updateDynamicDate() {
             const options = { day: '2-digit', month: 'short', year: 'numeric' };
@@ -1001,7 +951,6 @@ if (i >= 1 && i <= 14) {
 
         map.on('style.load', () => { map.addLayer(customThreeLayer); });
 
-        // Ground Banner with Rounded Edges, Smooth Opacity, and ENLARGED (72px) Dynamic Percentage Progress Sub-Text
         function createGroundImageLoader(scene) {
             const textureLoader = new THREE.TextureLoader();
             
@@ -1048,8 +997,6 @@ if (i >= 1 && i <= 14) {
                 updateGroundProgressCanvas(0);
 
                 progressTexture = new THREE.CanvasTexture(progressCanvas);
-                
-                // Enlarged Geometry Footprint (60 x 15) for Prominent Text Visibility
                 const progressGeo = new THREE.PlaneGeometry(60, 15);
                 const progressMat = new THREE.MeshBasicMaterial({ map: progressTexture, side: THREE.DoubleSide, transparent: true, opacity: 0.95, depthTest: false });
 
@@ -1065,7 +1012,6 @@ if (i >= 1 && i <= 14) {
             });
         }
 
-        // Enlarged Crisp Gold Text (72px)
         function updateGroundProgressCanvas(percent) {
             if (!progressCanvas) return;
             const ctx = progressCanvas.getContext('2d');
@@ -1170,7 +1116,6 @@ if (i >= 1 && i <= 14) {
             });
         }
 
-        // Two-Phase Click Handler with Expanded Park Mesh Detection
         map.on('click', (e) => {
             if (!loadedModel || !customThreeLayer.camera) return;
 
@@ -1291,51 +1236,38 @@ if (i >= 1 && i <= 14) {
                 const center = new THREE.Vector3();
                 box.getCenter(center);
 
-                const dbData = plotDatabase[query] || { area: "251", dim: "34.7' x 65.0'", facing: "North", status: "AVAILABLE", owner: "Unassigned" };
+                const dbData = plotDatabase[query] || { area: "166.67", dim: "30.0' x 50.0'", facing: "West", status: "AVAILABLE", owner: "Unassigned" };
 
                 if (heroGroup) {
-    let scaleX, scaleZ;
+                    let scaleX, scaleZ;
+                    if (dbData.swapScale) {
+                        scaleX = targetSize.z / Math.max(heroBaseBoxSize.x, 0.001);
+                        scaleZ = targetSize.x / Math.max(heroBaseBoxSize.z, 0.001);
+                    } else {
+                        scaleX = targetSize.x / Math.max(heroBaseBoxSize.x, 0.001);
+                        scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
+                    }
 
-    // Dimension swapping logic
-    if (dbData.swapScale) {
-        scaleX = targetSize.z / Math.max(heroBaseBoxSize.x, 0.001);
-        scaleZ = targetSize.x / Math.max(heroBaseBoxSize.z, 0.001);
-    } else {
-        scaleX = targetSize.x / Math.max(heroBaseBoxSize.x, 0.001);
-        scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
-    }
+                    if (dbData.facing === "West") scaleX = -scaleX;
 
-    // Directional orientation flips
-    if (dbData.facing === "West") {
-        scaleX = scaleX;
-    }
+                    heroGroup.position.set(center.x, center.y + 2.2, center.z);
+                    if (dbData.rot !== undefined) heroGroup.rotation.set(0, THREE.MathUtils.degToRad(dbData.rot), 0);
+                    
+                    heroGroup.visible = true;
+                    if (pinDropperMesh) pinDropperMesh.scale.set(0.45 / Math.abs(scaleX), 0.45, 0.45 / scaleZ);
+                    heroGroup.scale.set(0, 0, 0);
 
-    heroGroup.position.set(center.x, center.y + 2.2, center.z);
-    
-    if (dbData.rot !== undefined) {
-        heroGroup.rotation.set(0, THREE.MathUtils.degToRad(dbData.rot), 0);
-    }
-    
-    heroGroup.visible = true;
-
-    if (pinDropperMesh) {
-        pinDropperMesh.scale.set(0.45 / Math.abs(scaleX), 0.45, 0.45 / Math.abs(scaleZ));
-    }
-
-    heroGroup.scale.set(0, 0, 0);
-
-    // GSAP Pop-In Animation
-    gsap.to(heroGroup.scale, { 
-        x: -scaleX, y: 1.0, z: -scaleZ, duration: 0.5, ease: "back.out(1.4)",
-        onComplete: function() {
-            allowDimensionDraw = true;
-            document.getElementById('dimensionSvg').style.display = 'block';
-            document.getElementById('dimSideA').style.display = 'block';
-            document.getElementById('dimSideB').style.display = 'block';
-            document.getElementById('heroPlotBadge').style.display = 'block';
-        }
-    });
-}
+                    gsap.to(heroGroup.scale, { 
+                        x: -scaleX, y: 1.0, z: -scaleZ, duration: 0.5, ease: "back.out(1.4)",
+                        onComplete: function() {
+                            allowDimensionDraw = true;
+                            document.getElementById('dimensionSvg').style.display = 'block';
+                            document.getElementById('dimSideA').style.display = 'block';
+                            document.getElementById('dimSideB').style.display = 'block';
+                            document.getElementById('heroPlotBadge').style.display = 'block';
+                        }
+                    });
+                }
 
                 updatePlotColorsFromDB();
                 map.setPaintProperty('esri-satellite-layer', 'raster-opacity', 0.25);
@@ -1366,7 +1298,7 @@ if (i >= 1 && i <= 14) {
 
         function updatePlotUI(plotNum) {
             document.getElementById('plotId').innerText = `Plot ${plotNum}`;
-            const plotData = plotDatabase[plotNum] || { area: '251', dim: "34.7' x 65.0'", facing: 'North', status: 'AVAILABLE', owner: 'Unassigned' };
+            const plotData = plotDatabase[plotNum] || { area: '166.67', dim: "30.0' x 50.0'", facing: 'West', status: 'AVAILABLE', owner: 'Unassigned' };
 
             document.getElementById('plotArea').innerText = `${plotData.area} Sq.Yds`;
             document.getElementById('plotDim').innerText = plotData.dim;
@@ -1756,28 +1688,26 @@ if (i >= 1 && i <= 14) {
                 lineL.setAttribute('x2', screenPoints[2].x); lineL.setAttribute('y2', screenPoints[2].y);
             }
 
-            const labelA = document.getElementById('dimSideA');
-const labelB = document.getElementById('dimSideB');
-const plotData = plotDatabase[selectedPlotNum] || { dim: "34.7' x 65.0'", facing: "North" };
-const dimParts = plotData.dim.split('x');
+            const labelA = document.getElementById('dimSideA'), labelB = document.getElementById('dimSideB');
+            const plotData = plotDatabase[selectedPlotNum] || { dim: "30.0' x 50.0'", facing: "West" };
+            const dimParts = plotData.dim.split('x');
 
-if (labelA && labelB && dimParts.length === 2) {
-    const plotInt = parseInt(selectedPlotNum, 10);
-    
-    // Swapped dimension text logic for North plots (1-14)
-    if (plotInt >= 1 && plotInt <= 14) {
-        labelA.innerText = dimParts[1].trim(); // Longer edge now assigned to front line
-        labelB.innerText = dimParts[0].trim(); // Shorter edge assigned to side line
-    } else {
-        labelA.innerText = dimParts[0].trim();
-        labelB.innerText = dimParts[1].trim();
-    }
+            if (labelA && labelB && dimParts.length === 2) {
+                const plotInt = parseInt(selectedPlotNum, 10);
+                
+                if (plotInt >= 1 && plotInt <= 14) {
+                    labelA.innerText = dimParts[1].trim(); 
+                    labelB.innerText = dimParts[0].trim(); 
+                } else {
+                    labelA.innerText = dimParts[0].trim();
+                    labelB.innerText = dimParts[1].trim();
+                }
 
-    labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
-    labelA.style.top = `${(screenPoints[0].y + screenPoints[1].y) / 2 - 10}px`;
-    labelB.style.left = `${(screenPoints[1].x + screenPoints[2].x) / 2 + 15}px`;
-    labelB.style.top = `${(screenPoints[1].y + screenPoints[2].y) / 2}px`;
-}
+                labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
+                labelA.style.top = `${(screenPoints[0].y + screenPoints[1].y) / 2 - 10}px`;
+                labelB.style.left = `${(screenPoints[1].x + screenPoints[2].x) / 2 + 15}px`;
+                labelB.style.top = `${(screenPoints[1].y + screenPoints[2].y) / 2}px`;
+            }
 
             const centerVector = new THREE.Vector3();
             box.getCenter(centerVector);
@@ -1792,7 +1722,6 @@ if (labelA && labelB && dimParts.length === 2) {
         function openParkPlanModal() { renderGalleryGrid(); document.getElementById('parkModal').style.display = 'flex'; }
         function closeParkPlanModal() { document.getElementById('parkModal').style.display = 'none'; }
 
-        // Real-Time Gallery Grid Renderer with Image Fallback Handler
         function renderGalleryGrid() {
             const grid = document.getElementById('galleryGrid');
             if (!grid) return;
@@ -1811,7 +1740,6 @@ if (labelA && labelB && dimParts.length === 2) {
             });
         }
 
-        // Instant Upload Handler (Renders image immediately without reopening modal)
         function handleImageUpload(e) {
             const file = e.target.files[0];
             const titleInput = document.getElementById('imgTitleInput').value.trim() || "Uploaded Image";
@@ -1896,7 +1824,6 @@ if (labelA && labelB && dimParts.length === 2) {
             }
         });
 
-        // Draggable Toolbar Logic
         const dragToolbar = document.getElementById('rightToolbar');
         let isDraggingToolbar = false;
         let tStartX, tStartY, tStartTop, tStartLeft;
