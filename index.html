@@ -744,13 +744,13 @@ for (let i = 1; i <= 121; i++) {
     // 1. North Row Plots (1-14): Face North, Rotated 90°, Swapped Dimensions
     if (i >= 1 && i <= 14) {
         plotDatabase[key].facing = "North";
-        plotDatabase[key].rot = 90;
+        plotDatabase[key].rot = -90;
         plotDatabase[key].swapScale = true;
     } 
     // 2. West Columns (Plots 15-27, 41-53, 67-79, 93-105, 116-121): Face West, Rotated 180°
     else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
         plotDatabase[key].facing = "West";
-        plotDatabase[key].rot = 180;
+        plotDatabase[key].rot = 0;
         plotDatabase[key].swapScale = false;
     } 
     // 3. East Columns (Plots 28-40, 54-66, 80-92, 106-115): Face East, Rotated 0°
