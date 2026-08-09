@@ -715,7 +715,7 @@
             });
         }
 
-        // Exact Plot Database with Your Provided Dimensions (Plots 1–14 and 116–121 updated)
+        // Exact Plot Database with Your Provided Dimensions (Plots 1–14 and 116–121 explicitly mapped)
         let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {
             "1": { dim: "34'9\" x 64'6\"", area: "250", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
             "2": { dim: "35'0\" x 64'6\"", area: "252", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
@@ -1313,6 +1313,7 @@
             }
         }
 
+        // Updated updatePlotUI to strictly pull text values from your database (area and dim)
         function updatePlotUI(plotNum) {
             document.getElementById('plotId').innerText = `Plot ${plotNum}`;
             const plotData = plotDatabase[plotNum] || { area: '192.51', dim: "33.0' x 52.5'", facing: 'West', status: 'AVAILABLE', owner: 'Unassigned' };
@@ -1676,6 +1677,7 @@
             });
         }
 
+        // Updated Dimension Callouts function to strictly pull numbers from plotDatabase
         function updateDimensionCallouts() {
             if (!heroGroup || !heroGroup.visible || !selectedPlotNum || !allowDimensionDraw) return;
 
@@ -1710,18 +1712,8 @@
             const dimParts = plotData.dim.split('x');
 
             if (labelA && labelB && dimParts.length === 2) {
-                const plotInt = parseInt(selectedPlotNum, 10);
-                
-                if (plotInt >= 1 && plotInt <= 14) {
-                    labelA.innerText = dimParts[1].trim(); 
-                    labelB.innerText = dimParts[0].trim(); 
-                } else if (plotData.facing === "West" || plotData.facing === "East") {
-                    labelA.innerText = dimParts[0].trim(); 
-                    labelB.innerText = dimParts[1].trim(); 
-                } else {
-                    labelA.innerText = dimParts[0].trim();
-                    labelB.innerText = dimParts[1].trim();
-                }
+                labelA.innerText = dimParts[0].trim(); 
+                labelB.innerText = dimParts[1].trim(); 
 
                 labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
                 labelA.style.top = `${(screenPoints[0].y + screenPoints[1].y) / 2 - 10}px`;
@@ -1859,4 +1851,3 @@
     </script>
 </body>
 </html>
-```[cite: 7]
