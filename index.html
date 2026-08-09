@@ -99,7 +99,7 @@
             width: 100%; height: auto; max-height: 40px; object-fit: contain; margin-bottom: 8px; display: block;
         }
 
-        /* Dynamic Collapsible Info Panel with Mouse Scroll */
+        /* Dynamic Collapsible Info Panel with Mouse Scroll Enabled */
         .info-panel {
             position: absolute; top: 70px; left: 15px; width: 320px;
             border-radius: 20px; padding: 18px; z-index: 10;
@@ -683,46 +683,76 @@
         let currentLightboxIndex = 0;
         let pendingSavePayload = null;
 
+        let progressCanvas = null, progressTexture = null;
+
+        // PARK AMENITIES HOTSPOT DATA (You can edit these coordinates and image paths)
+        const PARK_AMENITIES_DATA = [
+            { 
+                id: "play_area", 
+                title: "Children's Play Area", 
+                coords: [15, 1.5, -12], 
+                img: "assets/images/Logo.png", 
+                desc: "Multi-play station with rubberized safety flooring & swings." 
+            },
+            { 
+                id: "walking_track", 
+                title: "Paved Walking Track", 
+                coords: [15, 1.5, 0], 
+                img: "assets/images/Logo.png", 
+                desc: "Peripheral 800m illuminated jogging and walking track." 
+            },
+            { 
+                id: "gazebo", 
+                title: "Central Gazebo & Seating", 
+                coords: [15, 1.5, 12], 
+                img: "assets/images/Logo.png", 
+                desc: "Shaded seating gazebo surrounded by landscaped flower beds." 
+            }
+        ];
+
+        let parkPinsGroup = new THREE.Group();
+
         const MORTGAGE_LANDS = ["3", "6", "12", "65", "66", "67", "80", "81", "104", "105", "113", "114", "115", "117"];
-        const AMENITY_LANDS = ["116"]; // Plot 119 un-bound from park trigger
+        const AMENITY_LANDS = []; 
 
         let userAccounts = JSON.parse(localStorage.getItem('neopolis_users')) || {
             "admin": { pass: "admin123", role: "admin" },
             "sales": { pass: "sales123", role: "sales" }
         };
 
-        // Static Image Gallery Initializer
-        let galleryImages = JSON.parse(localStorage.getItem('neopolis_gallery_images')) || [
-            { id: 1, title: "Park Plan Layout", src: "assets/images/park_plan.jpg" },
+        let defaultGallery = [
+            { id: 1, title: "Park Plan Layout", src: "assets/images/Logo.png" },
             { id: 2, title: "Project Entrance View", src: "assets/images/Logo.png" }
         ];
 
-        // PDF Dimensions Extracted Mapping
+        let galleryImages = JSON.parse(localStorage.getItem('neopolis_gallery_images')) || defaultGallery;
+
+        // PDF Dimensions & Exact Directional Rotations (Preserved Statuses)
         let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {
-            "1": { dim: "34'9\" x 65'3\"", area: "250.87", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "2": { dim: "35'0\" x 65'3\"", area: "252.19", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "3": { dim: "72'3\" x 64'6\"", area: "504.06", facing: "North", status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
-            "4": { dim: "35'0\" x 64'4\"", area: "250.00", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "5": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "6": { dim: "74'5\" x 64'2\"", area: "529.82", facing: "North", status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
-            "7": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "8": { dim: "35'0\" x 64'5\"", area: "250.80", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "9": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "10": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "11": { dim: "33'0\" x 65'2\"", area: "240.00", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "12": { dim: "74'8\" x 65'4\"", area: "541.41", facing: "North", status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
-            "13": { dim: "50'0\" x 64'8\"", area: "358.47", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "14": { dim: "44'3\" x 61'7\"", area: "315.00", facing: "North", status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "15": { dim: "36'0\" x 50'0\"", area: "200.14", facing: "East", status: "AVAILABLE", owner: "Unassigned" },
-            "65": { dim: "36'0\" x 52'6\"", area: "210.11", facing: "East", status: "HOLD", owner: "Mortgaged to APCRDA" },
-            "66": { dim: "36'0\" x 52'6\"", area: "210.11", facing: "East", status: "HOLD", owner: "Mortgaged to APCRDA" },
-            "67": { dim: "33'0\" x 52'6\"", area: "192.51", facing: "West", status: "HOLD", owner: "Mortgaged to APCRDA" },
-            "116": { dim: "92'11\" x 49'6\"", area: "Park Space", facing: "North", status: "HOLD", owner: "Amenity / Utility Space" },
-            "117": { dim: "95'11\" x 49'6\"", area: "535.89", facing: "North", status: "HOLD", owner: "Mortgaged to APCRDA" },
-            "118": { dim: "102'4\" x 58'0\"", area: "648.63", facing: "West", status: "HOLD", owner: "Landowner Share" },
-            "119": { dim: "105'10\" x 58'0\"", area: "675.00", facing: "West", status: "HOLD", owner: "Amenity / Utility Space" },
-            "120": { dim: "109'2\" x 58'1\"", area: "693.28", facing: "West", status: "HOLD", owner: "Landowner Share" },
-            "121": { dim: "112'2\" x 57'1\"", area: "701.11", facing: "West", status: "HOLD", owner: "Landowner Share" }
+            "1": { dim: "34'9\" x 65'3\"", area: "250.87", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "2": { dim: "35'0\" x 65'3\"", area: "252.19", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "3": { dim: "72'3\" x 64'6\"", area: "504.06", facing: "East", rot: 90, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
+            "4": { dim: "35'0\" x 64'4\"", area: "250.00", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "5": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "6": { dim: "74'5\" x 64'2\"", area: "529.82", facing: "East", rot: 90, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
+            "7": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "8": { dim: "35'0\" x 64'5\"", area: "250.80", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "9": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "10": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "11": { dim: "33'0\" x 65'2\"", area: "240.00", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "12": { dim: "74'8\" x 65'4\"", area: "541.41", facing: "East", rot: 90, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
+            "13": { dim: "50'0\" x 64'8\"", area: "358.47", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "14": { dim: "44'3\" x 61'7\"", area: "315.00", facing: "East", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "15": { dim: "36'0\" x 50'0\"", area: "200.14", facing: "East", rot: 0, status: "AVAILABLE", owner: "Unassigned" },
+            "65": { dim: "36'0\" x 52'6\"", area: "210.11", facing: "West", rot: 180, status: "HOLD", owner: "Mortgaged to APCRDA" },
+            "66": { dim: "36'0\" x 52'6\"", area: "210.11", facing: "West", rot: 180, status: "HOLD", owner: "Mortgaged to APCRDA" },
+            "67": { dim: "33'0\" x 52'6\"", area: "192.51", facing: "East", rot: 0, status: "HOLD", owner: "Mortgaged to APCRDA" },
+            "116": { dim: "92'11\" x 49'6\"", area: "511.00", facing: "West", rot: 180, status: "AVAILABLE", owner: "Unassigned" },
+            "117": { dim: "95'11\" x 49'6\"", area: "535.89", facing: "East", rot: 0, status: "HOLD", owner: "Mortgaged to APCRDA" },
+            "118": { dim: "102'4\" x 58'0\"", area: "648.63", facing: "East", rot: 0, status: "HOLD", owner: "Landowner Share" },
+            "119": { dim: "105'10\" x 58'0\"", area: "675.00", facing: "East", rot: 0, status: "HOLD", owner: "Amenity / Utility Space" },
+            "120": { dim: "109'2\" x 58'1\"", area: "693.28", facing: "East", rot: 0, status: "HOLD", owner: "Landowner Share" },
+            "121": { dim: "112'2\" x 57'1\"", area: "701.11", facing: "East", rot: 0, status: "HOLD", owner: "Landowner Share" }
         };
 
         for (let i = 1; i <= 121; i++) {
@@ -730,7 +760,6 @@
             if (!plotDatabase[key]) {
                 let dim = "33'0\" x 50'0\"";
                 let area = "183.36";
-                let facing = "East";
 
                 if (i >= 28 && i <= 41) {
                     dim = "33'0\" x 51'3\""; area = "188.00";
@@ -738,17 +767,22 @@
                     dim = "33'0\" x 52'6\""; area = "192.51";
                 }
 
-                if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
-                    facing = "West";
-                }
+                plotDatabase[key] = { dim: dim, area: area, status: "AVAILABLE", owner: "Unassigned" };
+            }
 
-                plotDatabase[key] = { dim: dim, area: area, facing: facing, status: "AVAILABLE", owner: "Unassigned" };
+            // Facing Rules: East columns face West (rot: 180), West columns face East (rot: 0)
+            if (i >= 1 && i <= 14) {
+                plotDatabase[key].facing = "East"; plotDatabase[key].rot = 90; plotDatabase[key].swapScale = true;
+            } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
+                plotDatabase[key].facing = "East"; plotDatabase[key].rot = 0;
+            } else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
+                plotDatabase[key].facing = "West"; plotDatabase[key].rot = 180;
             }
 
             if (MORTGAGE_LANDS.includes(key)) {
                 plotDatabase[key].status = "HOLD";
                 plotDatabase[key].owner = "Mortgaged to APCRDA";
-            } else if (AMENITY_LANDS.includes(key) || key === "119") {
+            } else if (key === "119") {
                 plotDatabase[key].status = "HOLD";
                 plotDatabase[key].owner = "Amenity / Utility Space";
             }
@@ -838,8 +872,8 @@
                 dirLight.position.set(120, 250, 100);
                 this.scene.add(dirLight);
 
-                // Create Image-based 3D Ground Banner "NeoPollis Name.png" matching 50% width
                 createGroundImageLoader(this.scene);
+                initParkAmenityHotspots(this.scene);
 
                 heroGroup = new THREE.Group();
                 heroGroup.visible = false;
@@ -847,32 +881,42 @@
 
                 const loader = new THREE.GLTFLoader();
 
-                loader.load('assets/models/MasterPlan.glb?v=' + Date.now(), (gltf) => {
-                    loadedModel = gltf.scene;
+                loader.load(
+                    'assets/models/MasterPlan.glb?v=' + Date.now(),
+                    (gltf) => {
+                        loadedModel = gltf.scene;
 
-                    loadedModel.traverse((child) => {
-                        if (child.isMesh) {
-                            child.material = child.material.clone();
-                            child.material.side = THREE.DoubleSide;
-                            child.updateMatrixWorld(true);
-                            child.userData.originalMaterial = child.material.clone();
+                        loadedModel.traverse((child) => {
+                            if (child.isMesh) {
+                                child.material = child.material.clone();
+                                child.material.side = THREE.DoubleSide;
+                                child.updateMatrixWorld(true);
+                                child.userData.originalMaterial = child.material.clone();
 
-                            const plotMatch = child.name.trim().match(/^\d+$/);
-                            if (plotMatch) {
-                                const plotNum = plotMatch[0];
-                                plotMeshes[plotNum] = child;
-                                createOverlayTagForPlot(plotNum);
+                                const plotMatch = child.name.trim().match(/^\d+$/);
+                                if (plotMatch) {
+                                    const plotNum = plotMatch[0];
+                                    plotMeshes[plotNum] = child;
+                                    createOverlayTagForPlot(plotNum);
+                                }
                             }
+                        });
+
+                        this.scene.add(loadedModel);
+                        if (groundTextGroup) groundTextGroup.visible = false; 
+
+                        updatePlotColorsFromDB();
+                        updateUserRoleUI();
+                        fetchPlotsFromBackend();
+                    },
+                    (xhr) => {
+                        if (xhr.lengthComputable && xhr.total > 0) {
+                            const percentComplete = Math.round((xhr.loaded / xhr.total) * 100);
+                            updateGroundProgressCanvas(percentComplete);
                         }
-                    });
-
-                    this.scene.add(loadedModel);
-                    if (groundTextGroup) groundTextGroup.visible = false; // Hide ground graphic once GLB renders
-
-                    updatePlotColorsFromDB();
-                    updateUserRoleUI();
-                    fetchPlotsFromBackend();
-                });
+                    },
+                    (err) => { console.error("GLB Load Error:", err); }
+                );
 
                 loader.load('assets/models/HeroPlot.glb?v=' + Date.now(), (gltf) => {
                     heroModel = gltf.scene;
@@ -926,67 +970,110 @@
 
         map.on('style.load', () => { map.addLayer(customThreeLayer); });
 
-        // Image-driven Loading Banner ("NeoPollis Name.png") scaled to 50% layout footprint
-        // Image-driven Ground Loading Banner ("NeoPollis Name.png")
-// Image-driven Ground Loading Banner ("NeoPollis Name.png") - Aspect Ratio Preserved & Scaled Larger
-function createGroundImageLoader(scene) {
-    const textureLoader = new THREE.TextureLoader();
-    
-    textureLoader.load('assets/images/NeoPollis%20Name.png?v=' + Date.now(), (tex) => {
-        tex.needsUpdate = true;
-        
-        // Calculate exact original image aspect ratio
-        const imgWidth = tex.image.width || 1024;
-        const imgHeight = tex.image.height || 256;
-        const aspectRatio = imgWidth / imgHeight;
+        // Ground Banner with Rounded Edges, Smooth Opacity, and Dynamic Percentage Progress Sub-Text
+        function createGroundImageLoader(scene) {
+            const textureLoader = new THREE.TextureLoader();
+            
+            textureLoader.load('assets/images/NeoPollis%20Name.png?v=' + Date.now(), (tex) => {
+                tex.needsUpdate = true;
+                
+                const imgWidth = tex.image.width || 1024;
+                const imgHeight = tex.image.height || 256;
+                const aspectRatio = imgWidth / imgHeight;
 
-        // Scale plane up larger while preserving exact aspect ratio
-        const planeHeight = 45; // Increased ground scale
-        const planeWidth = planeHeight * aspectRatio;
+                const planeHeight = 40; 
+                const planeWidth = planeHeight * aspectRatio;
 
-        const geo = new THREE.PlaneGeometry(planeWidth, planeHeight);
-        const mat = new THREE.MeshBasicMaterial({ 
-            map: tex, 
-            side: THREE.DoubleSide, 
-            transparent: true,
-            depthTest: false // Ensures logo renders prominently on top of terrain during GLB load
-        });
+                const canvas = document.createElement('canvas');
+                canvas.width = imgWidth; canvas.height = imgHeight;
+                const ctx = canvas.getContext('2d');
 
-        groundTextGroup = new THREE.Mesh(geo, mat);
-        groundTextGroup.rotation.x = -Math.PI / 2;
-        groundTextGroup.position.set(0, 0.5, 0);
-        scene.add(groundTextGroup);
+                const radius = Math.min(imgWidth, imgHeight) * 0.12;
+                ctx.beginPath();
+                ctx.moveTo(radius, 0); ctx.lineTo(imgWidth - radius, 0);
+                ctx.quadraticCurveTo(imgWidth, 0, imgWidth, radius);
+                ctx.lineTo(imgWidth, imgHeight - radius);
+                ctx.quadraticCurveTo(imgWidth, imgHeight, imgWidth - radius, imgHeight);
+                ctx.lineTo(radius, imgHeight); ctx.quadraticCurveTo(0, imgHeight, 0, imgHeight - radius);
+                ctx.lineTo(0, radius); ctx.quadraticCurveTo(0, 0, radius, 0);
+                ctx.closePath(); ctx.clip();
+                ctx.drawImage(tex.image, 0, 0, imgWidth, imgHeight);
 
-        if (map) map.triggerRepaint();
-    }, undefined, (err) => {
-        console.warn("Ground loading image fetch failed, rendering fallback canvas:", err);
-        
-        // Canvas Fallback maintaining exact 4:1 ratio
-        const canvas = document.createElement('canvas');
-        canvas.width = 1024; canvas.height = 256;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = "rgba(13, 18, 28, 0.95)";
-        ctx.fillRect(0, 0, 1024, 256);
-        ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 8;
-        ctx.strokeRect(10, 10, 1004, 236);
-        ctx.font = "Bold 65px Outfit, sans-serif";
-        ctx.fillStyle = "#ffffff"; ctx.textAlign = "center";
-        ctx.fillText("NeoPolis SPRINGS", 512, 120);
-        ctx.font = "Bold 32px Outfit, sans-serif";
-        ctx.fillStyle = "#d4af37";
-        ctx.fillText("LOADING MASTER PLAN...", 512, 185);
+                const roundedTexture = new THREE.CanvasTexture(canvas);
+                roundedTexture.needsUpdate = true;
 
-        const tex = new THREE.CanvasTexture(canvas);
-        const geo = new THREE.PlaneGeometry(100, 25); // Proportionate large fallback plane
-        const mat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide, transparent: true });
+                const geo = new THREE.PlaneGeometry(planeWidth, planeHeight);
+                const mat = new THREE.MeshBasicMaterial({ 
+                    map: roundedTexture, side: THREE.DoubleSide, transparent: true, opacity: 0.85, depthTest: false 
+                });
 
-        groundTextGroup = new THREE.Mesh(geo, mat);
-        groundTextGroup.rotation.x = -Math.PI / 2;
-        groundTextGroup.position.set(0, 0.5, 0);
-        scene.add(groundTextGroup);
-        if (map) map.triggerRepaint();
-    });
-}
+                groundTextGroup = new THREE.Group();
+                const mainLogoMesh = new THREE.Mesh(geo, mat);
+                mainLogoMesh.rotation.x = -Math.PI / 2;
+                groundTextGroup.add(mainLogoMesh);
+
+                progressCanvas = document.createElement('canvas');
+                progressCanvas.width = 512; progressCanvas.height = 128;
+                updateGroundProgressCanvas(0);
+
+                progressTexture = new THREE.CanvasTexture(progressCanvas);
+                const progressGeo = new THREE.PlaneGeometry(30, 7.5);
+                const progressMat = new THREE.MeshBasicMaterial({ map: progressTexture, side: THREE.DoubleSide, transparent: true, opacity: 0.9, depthTest: false });
+
+                const progressMesh = new THREE.Mesh(progressGeo, progressMat);
+                progressMesh.rotation.x = -Math.PI / 2;
+                progressMesh.position.set(0, 0.1, (planeHeight / 2) + 6);
+                groundTextGroup.add(progressMesh);
+
+                groundTextGroup.position.set(0, 0.5, 0);
+                scene.add(groundTextGroup);
+
+                if (map) map.triggerRepaint();
+            });
+        }
+
+        function updateGroundProgressCanvas(percent) {
+            if (!progressCanvas) return;
+            const ctx = progressCanvas.getContext('2d');
+            ctx.clearRect(0, 0, 512, 128);
+
+            ctx.font = "Bold 38px Outfit, sans-serif";
+            ctx.fillStyle = "#d4af37";
+            ctx.textAlign = "center";
+            ctx.shadowColor = "rgba(0,0,0,0.8)";
+            ctx.shadowBlur = 6;
+            ctx.fillText(`LOADING MASTER PLAN... ${percent}%`, 256, 70);
+
+            if (progressTexture) progressTexture.needsUpdate = true;
+            if (map) map.triggerRepaint();
+        }
+
+        function initParkAmenityHotspots(scene) {
+            parkPinsGroup = new THREE.Group();
+            parkPinsGroup.visible = false; 
+
+            PARK_AMENITIES_DATA.forEach((amenity) => {
+                const pinGeo = new THREE.ConeGeometry(0.8, 2.5, 16);
+                const pinMat = new THREE.MeshBasicMaterial({ color: 0x22c55e, side: THREE.DoubleSide });
+                const pinMesh = new THREE.Mesh(pinGeo, pinMat);
+
+                pinMesh.rotation.x = Math.PI; 
+                pinMesh.position.set(amenity.coords[0], amenity.coords[1], amenity.coords[2]);
+                pinMesh.userData = amenity;
+
+                gsap.to(pinMesh.position, {
+                    y: amenity.coords[1] + 0.6,
+                    duration: 1.2,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut"
+                });
+
+                parkPinsGroup.add(pinMesh);
+            });
+
+            scene.add(parkPinsGroup);
+        }
 
         function create3DPinDropper() {
             if (!heroModel) return;
@@ -1049,8 +1136,28 @@ function createGroundImageLoader(scene) {
             });
         }
 
+        // Two-Phase Click Handler (Park Highlight -> Pins Reveal -> Amenity Photo Lightbox)
         map.on('click', (e) => {
             if (!loadedModel || !customThreeLayer.camera) return;
+
+            if (parkPinsGroup && parkPinsGroup.visible) {
+                const mouse = new THREE.Vector2(
+                    (e.point.x / map.getCanvas().clientWidth) * 2 - 1,
+                    -(e.point.y / map.getCanvas().clientHeight) * 2 + 1
+                );
+
+                const raycaster = new THREE.Raycaster();
+                raycaster.setFromCamera(mouse, customThreeLayer.camera);
+                const intersects = raycaster.intersectObjects(parkPinsGroup.children);
+
+                if (intersects.length > 0) {
+                    const clickedAmenity = intersects[0].object.userData;
+                    document.getElementById('lightboxImg').src = clickedAmenity.img;
+                    document.getElementById('lightboxCaption').innerText = clickedAmenity.title;
+                    document.getElementById('imageLightbox').style.display = 'flex';
+                    return;
+                }
+            }
 
             let closestPlot = null;
             let minDistance = Infinity;
@@ -1075,7 +1182,15 @@ function createGroundImageLoader(scene) {
             });
 
             if (closestPlot) {
-                if (closestPlot === "116") openParkPlanModal();
+                const targetMesh = plotMeshes[closestPlot];
+                const isParkMesh = targetMesh.name.toLowerCase().includes("park") || targetMesh.name.toLowerCase().includes("open");
+
+                if (isParkMesh) {
+                    activateParkZoneHighlight(closestPlot, targetMesh);
+                    return;
+                }
+
+                if (parkPinsGroup) parkPinsGroup.visible = false;
                 selectedPlotNum = closestPlot;
                 document.getElementById('searchInput').value = closestPlot;
                 focusSelectedPlot(closestPlot);
@@ -1084,6 +1199,32 @@ function createGroundImageLoader(scene) {
 
             resetToOverview();
         });
+
+        function activateParkZoneHighlight(plotNum, parkMesh) {
+            selectedPlotNum = plotNum;
+            parkMesh.material = new THREE.MeshBasicMaterial({ color: 0x22c55e, side: THREE.DoubleSide });
+
+            Object.keys(plotMeshes).forEach(pKey => {
+                if (pKey !== plotNum && plotMeshes[pKey].material) {
+                    plotMeshes[pKey].material.color.multiplyScalar(0.4);
+                }
+            });
+
+            if (parkPinsGroup) parkPinsGroup.visible = true;
+
+            document.getElementById('plotId').innerText = "PARK ZONE";
+            document.getElementById('plotArea').innerText = "Landscaped Area";
+            document.getElementById('plotDim').innerText = "Amenity Lawn";
+            document.getElementById('plotFacing').innerText = "East Boundary";
+            document.getElementById('plotStatus').innerText = "AMENITY";
+            document.getElementById('plotStatus').className = "status-badge hold";
+
+            const infoPanel = document.getElementById('infoPanel');
+            if (infoPanel) {
+                infoPanel.classList.remove('collapsed');
+                infoPanel.classList.add('expanded');
+            }
+        }
 
         function focusSelectedPlot(num) {
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
@@ -1513,6 +1654,8 @@ function createGroundImageLoader(scene) {
             document.getElementById('orbitBtn').classList.remove('active');
 
             if (heroGroup) heroGroup.visible = false;
+            if (parkPinsGroup) parkPinsGroup.visible = false;
+
             document.getElementById('dimensionSvg').style.display = 'none';
             document.getElementById('dimSideA').style.display = 'none';
             document.getElementById('dimSideB').style.display = 'none';
@@ -1593,18 +1736,26 @@ function createGroundImageLoader(scene) {
         function openParkPlanModal() { renderGalleryGrid(); document.getElementById('parkModal').style.display = 'flex'; }
         function closeParkPlanModal() { document.getElementById('parkModal').style.display = 'none'; }
 
+        // Real-Time Gallery Grid Renderer with Image Fallback Handler
         function renderGalleryGrid() {
             const grid = document.getElementById('galleryGrid');
+            if (!grid) return;
             grid.innerHTML = '';
+
             galleryImages.forEach((img, idx) => {
                 const card = document.createElement('div');
                 card.className = 'gallery-card';
                 card.onclick = function() { openLightboxAtIndex(idx); };
-                card.innerHTML = `<img src="${img.src}" alt="${img.title}"><div class="gallery-card-title">${img.title}</div>`;
+
+                card.innerHTML = `
+                    <img src="${img.src}" alt="${img.title}" onerror="this.onerror=null; this.src='assets/images/ZenArch_Logo.png';">
+                    <div class="gallery-card-title">${img.title}</div>
+                `;
                 grid.appendChild(card);
             });
         }
 
+        // Instant Upload Handler (Renders image immediately without reopening modal)
         function handleImageUpload(e) {
             const file = e.target.files[0];
             const titleInput = document.getElementById('imgTitleInput').value.trim() || "Uploaded Image";
@@ -1616,29 +1767,47 @@ function createGroundImageLoader(scene) {
                 const statusMsg = document.getElementById('uploadStatusMsg');
                 const percentText = document.getElementById('uploadPercentText');
 
-                container.style.display = 'block'; statusBox.style.display = 'flex'; fill.style.width = '0%';
-                statusMsg.innerText = "Uploading..."; percentText.innerText = "0%";
+                container.style.display = 'block';
+                statusBox.style.display = 'flex';
+                fill.style.width = '0%';
+                statusMsg.innerText = "Uploading...";
+                percentText.innerText = "0%";
 
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += 10; fill.style.width = `${progress}%`; percentText.innerText = `${progress}%`;
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    let progress = 0;
+                    const interval = setInterval(() => {
+                        progress += 20;
+                        fill.style.width = `${progress}%`;
+                        percentText.innerText = `${progress}%`;
 
-                    if (progress >= 100) {
-                        clearInterval(interval);
-                        statusMsg.innerText = "Upload Complete!";
-                        const reader = new FileReader();
-                        reader.onload = function(event) {
-                            galleryImages.push({ id: Date.now(), title: titleInput, src: event.target.result });
+                        if (progress >= 100) {
+                            clearInterval(interval);
+                            statusMsg.innerText = "Upload Complete!";
+
+                            const newImage = {
+                                id: Date.now(),
+                                title: titleInput,
+                                src: event.target.result 
+                            };
+
+                            galleryImages.push(newImage);
                             localStorage.setItem('neopolis_gallery_images', JSON.stringify(galleryImages));
+
+                            renderGalleryGrid();
+
                             setTimeout(() => {
                                 document.getElementById('imgTitleInput').value = '';
-                                container.style.display = 'none'; statusBox.style.display = 'none';
-                                renderGalleryGrid();
-                            }, 300);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                }, 30);
+                                document.getElementById('imgFileInput').value = '';
+                                container.style.display = 'none';
+                                statusBox.style.display = 'none';
+                            }, 400);
+                        }
+                    }, 40);
+                };
+
+                reader.readAsDataURL(file);
             }
         }
 

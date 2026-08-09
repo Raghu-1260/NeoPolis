@@ -37,7 +37,6 @@ async function sendMetaWhatsAppMessage(toPhone, messageBody) {
         return;
     }
 
-    // Clean phone number format
     const cleanPhone = String(toPhone).replace(/[^0-9]/g, '');
     const recipientPhone = cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`;
 
