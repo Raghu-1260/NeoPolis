@@ -8,9 +8,22 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2",
+    "express": "^4.22.2",
     "express-rate-limit": "^7.3.1",
     "mongodb": "^6.8.0",
+    "mongoose": "^9.9.1",
     "twilio": "^5.2.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Raghu-1260/NeoPolis.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Raghu-1260/NeoPolis/issues"
+  },
+  "homepage": "https://github.com/Raghu-1260/NeoPolis#readme"
 }
