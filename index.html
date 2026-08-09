@@ -715,49 +715,61 @@
             });
         }
 
-        // PDF Dimensions for Plots 15 to 112
-        let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {
-            "1": { dim: "34'9\" x 65'3\"", area: "250.87", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "2": { dim: "35'0\" x 65'3\"", area: "252.19", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "3": { dim: "72'3\" x 64'6\"", area: "504.06", facing: "North", rot: 270, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
-            "4": { dim: "35'0\" x 64'4\"", area: "250.00", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "5": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "6": { dim: "74'5\" x 64'2\"", area: "529.82", facing: "North", rot: 270, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
-            "7": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "8": { dim: "35'0\" x 64'5\"", area: "250.80", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "9": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "10": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "11": { dim: "33'0\" x 65'2\"", area: "240.00", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "12": { dim: "74'8\" x 65'4\"", area: "541.41", facing: "North", rot: 270, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
-            "13": { dim: "50'0\" x 64'8\"", area: "358.47", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "14": { dim: "44'3\" x 61'7\"", area: "315.00", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "116": { dim: "92'11\" x 49'6\"", area: "511.00", facing: "West", rot: 180, status: "AVAILABLE", owner: "Unassigned" },
-            "117": { dim: "95'11\" x 49'6\"", area: "535.89", facing: "East", rot: 0, status: "HOLD", owner: "Mortgaged to APCRDA" },
-            "118": { dim: "102'4\" x 58'0\"", area: "648.63", facing: "East", rot: 0, status: "HOLD", owner: "Landowner Share" },
-            "119": { dim: "105'10\" x 58'0\"", area: "675.00", facing: "East", rot: 0, status: "HOLD", owner: "Amenity / Utility Space" },
-            "120": { dim: "109'2\" x 58'1\"", area: "693.28", facing: "East", rot: 0, status: "HOLD", owner: "Landowner Share" },
-            "121": { dim: "112'2\" x 57'1\"", area: "701.11", facing: "East", rot: 0, status: "HOLD", owner: "Landowner Share" }
+        // Complete Plot Database populated with your exact specified values
+        let plotDataSourceExplicit = {
+            "1": { dim: "34'9\" x 64'6\"", area: "250" },
+            "2": { dim: "35'0\" x 64'6\"", area: "252" },
+            "3": { dim: "72'3\" x 64'6\"", area: "504" },
+            "4": { dim: "35'0\" x 64'6\"", area: "250" },
+            "5": { dim: "35'0\" x 64'4\"", area: "250" },
+            "6": { dim: "74'5\" x 64'2\"", area: "529" },
+            "7": { dim: "35'0\" x 64'2\"", area: "250" },
+            "8": { dim: "35'0\" x 64'5\"", area: "250" },
+            "9": { dim: "74'5\" x 64'7\"", area: "535" },
+            "10": { dim: "33'0\" x 65'0\"", area: "238" },
+            "11": { dim: "33'0\" x 65'2\"", area: "238" },
+            "12": { dim: "74'8\" x 64'8\"", area: "541" },
+            "13": { dim: "50'0\" x 64'8\"", area: "354" },
+            "14": { dim: "44'3\" x 63'0\"", area: "300" },
+            "116": { dim: "49'6\" x 92'11\"", area: "519.47" },
+            "117": { dim: "49'6\" x 95'11\"", area: "535.89" },
+            "118": { dim: "58'0\" x 98'11\"", area: "648.63" },
+            "119": { dim: "58'0\" x 102'4\"", area: "671" },
+            "120": { dim: "58'0\" x 105'10\"", area: "693" },
+            "121": { dim: "57'0\" x 112'2\"", area: "701.11" }
         };
+
+        let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {};
 
         for (let i = 1; i <= 121; i++) {
             const key = String(i);
-            if (!plotDatabase[key]) {
-                let width = "33'0\"";
-                let length = "52'6\"";
-                let area = "192.51";
+            let dim = "33'0\" x 52'6\"";
+            let area = "192.5";
 
+            if (plotDataSourceExplicit[key]) {
+                dim = plotDataSourceExplicit[key].dim;
+                area = plotDataSourceExplicit[key].area;
+            } else if (i >= 15 && i <= 115) {
                 if (["15", "40", "41", "66", "67", "92", "93", "105"].includes(key)) {
-                    width = "36'0\"";
+                    dim = "36'0\" x 52'6\"";
                     area = "210.24";
+                } else {
+                    dim = "33'0\" x 52'6\"";
+                    area = "192.5";
                 }
+            }
 
-                plotDatabase[key] = { dim: `${width} x ${length}`, area: area, status: "AVAILABLE", owner: "Unassigned" };
+            if (!plotDatabase[key]) {
+                plotDatabase[key] = { dim: dim, area: area, status: "AVAILABLE", owner: "Unassigned" };
+            } else {
+                plotDatabase[key].dim = dim;
+                plotDatabase[key].area = area;
             }
 
             if (i >= 1 && i <= 14) {
                 plotDatabase[key].facing = "North"; plotDatabase[key].rot = 270; plotDatabase[key].swapScale = true;
             } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
-                plotDatabase[key].facing = "West"; plotDatabase[key].rot = 0; plotDatabase[key].swapScale = false;
+                plotDatabase[key].facing = "West"; plotDatabase[key].rot = 180; plotDatabase[key].swapScale = false;
             } else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
                 plotDatabase[key].facing = "East"; plotDatabase[key].rot = 0; plotDatabase[key].swapScale = false;
             }
@@ -1211,7 +1223,7 @@
             }
         }
 
-        // Updated Hero Mesh Scaler (Strictly West-Only Scale Flip)
+        // EXACT ORIGINAL WORKING HERO PLOT SCALING & ROTATION CODE (Restored)
         function focusSelectedPlot(num) {
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
             selectedPlotNum = query;
@@ -1252,11 +1264,10 @@
                         scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
                     }
 
-                    // STRICT WEST-ONLY SCALING (East & North Plots left untouched)
                     if (dbData.facing === "West") {
                         scaleZ = scaleZ; 
                     } else if (dbData.facing === "East") {
-                        scaleX = -scaleX; // No flip or extra scale applied to East plots
+                        scaleX = -scaleX; 
                     }
 
                     heroGroup.position.set(center.x, center.y + 2.2, center.z);
@@ -1853,7 +1864,7 @@
         });
 
         dragToolbar.addEventListener('pointerup', function(e) {
-            if (!isDraggingToolbar) return;
+            if (!isDraggingToolbar, !isDraggingToolbar) return;
             isDraggingToolbar = false;
             dragToolbar.style.transition = 'max-height 0.3s ease, padding 0.3s ease';
             dragToolbar.releasePointerCapture(e.pointerId);
