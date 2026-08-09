@@ -736,13 +736,7 @@
 
         // DEFAULT GALLERY LIST DIRECTED TO ASSETS/IMAGES/GALLERY/
         let defaultGallery = [
-            { id: 1, title: "Park Layout Plan", src: "assets/images/gallery/park_plan.jpg" },
-            { id: 2, title: "Project Entrance View", src: "assets/images/Logo.png" },
-            { id: 3, title: "Cricket Pitch & Sports Zone", src: "assets/images/gallery/cricket_pitch.jpg" },
-            { id: 4, title: "Open Amphitheater", src: "assets/images/gallery/amphitheater.jpg" },
-            { id: 5, title: "Children's Play Park", src: "assets/images/gallery/play_area.jpg" },
-            { id: 6, title: "Gazebo & Water Fountain", src: "assets/images/gallery/gazebo.jpg" }
-        ];
+           ];
 
         let galleryImages = JSON.parse(localStorage.getItem('neopolis_gallery_images')) || defaultGallery;
 
@@ -790,11 +784,11 @@
             }
 
             if (i >= 1 && i <= 14) {
-                plotDatabase[key].facing = "East"; plotDatabase[key].rot = 90; plotDatabase[key].swapScale = true;
+                plotDatabase[key].facing = "North"; plotDatabase[key].rot = -90; plotDatabase[key].swapScale = true;
             } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
-                plotDatabase[key].facing = "East"; plotDatabase[key].rot = 0;
+                plotDatabase[key].facing = "West"; plotDatabase[key].rot = 0;
             } else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
-                plotDatabase[key].facing = "West"; plotDatabase[key].rot = 180;
+                plotDatabase[key].facing = "East"; plotDatabase[key].rot = 0;
             }
 
             if (MORTGAGE_LANDS.includes(key)) {
@@ -974,7 +968,7 @@
                 const l = new THREE.Matrix4().makeTranslation(
                     modelTransform.translateX, modelTransform.translateY, modelTransform.translateZ + (altVal * 0.000001)
                 )
-                .scale(new THREE.Vector3(baseScale * scaleXVal, -baseScale * scaleYVal, baseScale * scaleXVal))
+                .scale(new THREE.Vector3(baseScale * scaleXVal, baseScale * scaleYVal, baseScale * scaleXVal))
                 .multiply(rotationX).multiply(rotationY).multiply(rotationZ);
 
                 this.camera.projectionMatrix = m.multiply(l);
