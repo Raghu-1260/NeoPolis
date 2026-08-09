@@ -715,7 +715,7 @@
             });
         }
 
-        // Complete Plot Database mapping explicitly with your exact values
+        // Explicit Database Mapping for All Specific Plots (1-14, 15-115, 116-121)
         let plotDataSourceExplicit = {
             "1": { dim: "34'9\" x 64'6\"", area: "250" },
             "2": { dim: "35'0\" x 64'6\"", area: "252" },
@@ -766,6 +766,7 @@
                 plotDatabase[key].area = area;
             }
 
+            // Correct Facing and Rotation mapping: East plots face East (rot 0), West plots face West (rot 180), North plots face North (rot 270)
             if (i >= 1 && i <= 14) {
                 plotDatabase[key].facing = "North"; plotDatabase[key].rot = 270; plotDatabase[key].swapScale = true;
             } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
@@ -1223,7 +1224,7 @@
             }
         }
 
-        // EXACT ORIGINAL WORKING HERO PLOT SCALING & ROTATION CODE (Untouched)
+        // FIXED HERO PLOT SCALING & ROTATION: Explicitly mapping orientation based on facing direction
         function focusSelectedPlot(num) {
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
             selectedPlotNum = query;
@@ -1256,7 +1257,7 @@
                 if (heroGroup) {
                     let scaleX, scaleZ;
 
-                    if (dbData.swapScale) {
+                    if (dbData.facing === "North") {
                         scaleX = targetSize.z / Math.max(heroBaseBoxSize.x, 0.001);
                         scaleZ = targetSize.x / Math.max(heroBaseBoxSize.z, 0.001);
                     } else {
@@ -1267,7 +1268,7 @@
                     if (dbData.facing === "West") {
                         scaleZ = scaleZ; 
                     } else if (dbData.facing === "East") {
-                        scaleX = -scaleX; 
+                        scaleX = scaleX; 
                     }
 
                     heroGroup.position.set(center.x, center.y + 2.2, center.z);
@@ -1689,7 +1690,6 @@
             });
         }
 
-        // Updated Dimension Callouts function with swapped dimension text parts (dimParts[1] and dimParts[0])
         function updateDimensionCallouts() {
             if (!heroGroup || !heroGroup.visible || !selectedPlotNum || !allowDimensionDraw) return;
 
@@ -1727,11 +1727,14 @@
                 const plotInt = parseInt(selectedPlotNum, 10);
                 
                 if (plotInt >= 1 && plotInt <= 14) {
+                    labelA.innerText = dimParts[1].trim(); 
+                    labelB.innerText = dimParts[0].trim(); 
+                } else if (plotData.facing === "West" || plotData.facing === "East") {
                     labelA.innerText = dimParts[0].trim(); 
                     labelB.innerText = dimParts[1].trim(); 
                 } else {
-                    labelA.innerText = dimParts[1].trim(); 
-                    labelB.innerText = dimParts[0].trim(); 
+                    labelA.innerText = dimParts[0].trim();
+                    labelB.innerText = dimParts[1].trim();
                 }
 
                 labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
