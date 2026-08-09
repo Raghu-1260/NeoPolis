@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Avenue Interactive | NeoPolis Springs Master Plan</title>
 
+    <!-- Zen Arch Tab Favicon Logo -->
+    <link rel="icon" type="image/png" href="assets/images/ZenArch_Logo.png">
+
     <!-- MapLibre GL CSS & JS -->
     <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
     <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
@@ -92,15 +95,22 @@
         }
         .toggle-password-eye:hover { opacity: 1; }
 
-        /* Dynamic Collapsible Info Panel */
+        .zenarch-portal-logo {
+            width: 100%; height: auto; max-height: 40px; object-fit: contain; margin-bottom: 8px; display: block;
+        }
+
+        /* Dynamic Collapsible Info Panel with Mouse Scroll Enabled */
         .info-panel {
             position: absolute; top: 70px; left: 15px; width: 320px;
             border-radius: 20px; padding: 18px; z-index: 10;
             transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden; max-height: 85vh;
+            overflow-y: auto !important; max-height: 85vh; pointer-events: auto;
         }
+        .info-panel::-webkit-scrollbar { width: 4px; }
+        .info-panel::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.5); border-radius: 4px; }
+
         .info-panel.collapsed {
-            max-height: 52px !important; padding-bottom: 0 !important;
+            max-height: 52px !important; padding-bottom: 0 !important; overflow: hidden !important;
         }
         .info-panel-header {
             display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; cursor: pointer;
@@ -344,8 +354,6 @@
 
         @media (max-width: 768px) {
             .widget-pill { display: none; }
-            
-            /* Fixed Mobile Bottom Sheet: Restricted to exactly 50% screen height */
             .info-panel {
                 top: auto !important; 
                 bottom: 0 !important; 
@@ -353,17 +361,11 @@
                 right: 0 !important; 
                 width: 100vw !important;
                 max-height: 50vh !important;
-                overflow-y: auto !important;
                 border-radius: 20px 20px 0 0 !important;
                 transform: translateY(calc(100% - 65px));
                 transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
             }
-            
-            .info-panel.expanded,
-            .info-panel:not(.collapsed) {
-                transform: translateY(0) !important;
-            }
-
+            .info-panel.expanded, .info-panel:not(.collapsed) { transform: translateY(0) !important; }
             .legend-bar, .phone-pill { display: none; }
             .right-toolbar { top: 60px; right: 10px; }
             .lightbox-container { max-width: 90vw; max-height: 80vh; }
@@ -392,7 +394,7 @@
 
     <div id="plotOverlayContainer"></div>
 
-    <!-- Enhanced Hero Badge with dynamic status tag -->
+    <!-- Dynamic Hero Badge -->
     <div id="heroPlotBadge">
         <div class="badge-title" id="badgePlotTitle">Plot 1</div>
         <div class="badge-sub" id="badgePlotArea">251 Sq.Yds</div>
@@ -413,23 +415,25 @@
             <div class="widget-item">📅 <strong id="currentDateDisplay">Loading...</strong></div>
         </div>
 
-        <!-- Top Right Auth Dropdown Widget -->
+        <!-- Top Right Auth Dropdown Widget with Zen Arch Logo -->
         <div class="auth-container">
             <button class="auth-btn" onclick="toggleAuthDropdown()">
                 👤 <span id="authBtnText">LOGIN</span>
             </button>
             <div class="auth-dropdown glass-card" id="authDropdown">
+                <!-- Zen Arch Company Branding above Login Portal -->
+                <img src="assets/images/ZenArch_Name.png" alt="Zen Arch Logo" class="zenarch-portal-logo">
                 <h4 id="authFormTitle">ACCOUNT LOGIN</h4>
                 
                 <div id="loginForm">
                     <div class="auth-field">
                         <label>USERNAME</label>
-                        <input type="text" id="loginUsername" placeholder="Enter username">
+                        <input type="text" id="loginUsername" placeholder="Enter username" onkeydown="if(event.key === 'Enter') performLogin()">
                     </div>
                     <div class="auth-field" style="margin-top:6px;">
                         <label>PASSWORD</label>
                         <div class="auth-input-wrapper">
-                            <input type="password" id="loginPassword" placeholder="Enter password">
+                            <input type="password" id="loginPassword" placeholder="Enter password" onkeydown="if(event.key === 'Enter') performLogin()">
                             <span class="toggle-password-eye" onclick="togglePasswordVisibility('loginPassword', this)">👁️</span>
                         </div>
                     </div>
@@ -442,7 +446,6 @@
                     
                     <div id="adminPanelBtn" style="display:none;">
                         <button class="btn-panel btn-gold" style="margin-top:6px;" onclick="showAdminUserModal()">➕ CREATE USER</button>
-                        
                         <div style="margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
                             <label style="font-size: 0.65rem; color: #a0aec0; font-weight: 700;">CEO MOBILE (ADMIN ONLY)</label>
                             <div style="display: flex; gap: 5px; margin-top: 4px;">
@@ -493,7 +496,7 @@
         </div>
     </div>
 
-    <!-- Dynamic Collapsible Focus Information Panel -->
+    <!-- Dynamic Collapsible Info Panel with Mouse Scroll -->
     <div class="info-panel glass-card" id="infoPanel">
         <div class="info-panel-header" onclick="toggleInfoPanelCollapse()">
             <div class="panel-label">SEARCH PLOT</div>
@@ -501,7 +504,7 @@
         </div>
 
         <div class="search-box">
-            <input type="text" id="searchInput" class="search-input" value="1" placeholder="Enter Plot No. (e.g. 1, 4, 72, 89, 116)" onkeyup="handleSearch(event)">
+            <input type="text" id="searchInput" class="search-input" value="1" placeholder="Enter Plot No. (e.g. 1, 4, 72, 89, 116)" onkeydown="if(event.key === 'Enter') focusSelectedPlot()">
         </div>
 
         <div class="toggle-row">
@@ -541,7 +544,7 @@
                     <option value="AVAILABLE">AVAILABLE</option>
                     <option value="RESERVED">RESERVED</option>
                     <option value="HOLD">HOLD</option>
-                    <option value="SOLD">SOLD (CEO OTP Required)</option>
+                    <option value="SOLD">SOLD (CEO WhatsApp OTP Required)</option>
                 </select>
             </div>
             <div class="sales-field">
@@ -563,7 +566,7 @@
 
     <div class="phone-pill glass-card">📞 +91 9505 894 894</div>
 
-    <!-- Dynamic Collapsible Right Toolbar (Draggable) -->
+    <!-- Draggable Toolbar -->
     <div class="right-toolbar glass-card" id="rightToolbar">
         <button class="right-toolbar-toggle" onclick="toggleRightToolbar()" id="rightToolbarToggleBtn">−</button>
         <button class="tool-icon-btn active" onclick="focusSelectedPlot()">
@@ -582,7 +585,6 @@
             <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
             ORBIT
         </button>
-        
         <button class="tool-icon-btn" onclick="window.open('https://www.google.com/maps/search/?api=1&query=16.470777198842512,80.75431545841093', '_blank')">
             <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
             MAPS
@@ -597,12 +599,12 @@
         <div class="legend-item" onclick="filterLegendStatus('SOLD')"><div class="dot sold"></div> SOLD</div>
     </div>
 
-    <!-- CEO OTP AUTHORIZATION MODAL -->
+    <!-- CEO WhatsApp OTP MODAL -->
     <div id="otpModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">CEO Authorization Required</div>
             <p style="font-size: 0.82rem; color: #a0aec0; margin-bottom: 14px; line-height: 1.4;">
-                Enter the 6-digit OTP code sent to the CEO mobile (+91 <span id="otpCeoDisplayNumber">98XXX XXXX</span>) to complete this transaction.
+                Enter the 6-digit WhatsApp OTP sent to CEO (+91 <span id="otpCeoDisplayNumber">98XXX XXXX</span>).
             </p>
             <form onsubmit="event.preventDefault(); submitFinalOtpSave();">
                 <input type="text" id="otpInput" maxlength="6" placeholder="Demo Code: 849201" 
@@ -644,11 +646,10 @@
         </div>
     </div>
 
-    <!-- 80% SCALE LIGHTBOX OVERLAY WITH NEXT/PREV NAVIGATION -->
+    <!-- LIGHTBOX OVERLAY -->
     <div class="image-lightbox" id="imageLightbox" onclick="closeLightbox(event)">
         <div class="lightbox-container" onclick="event.stopPropagation()">
             <button class="lightbox-close" onclick="closeLightbox(event)">✖</button>
-            
             <div class="lightbox-nav-btn prev" onclick="navigateLightbox(-1)">◀</div>
             <div class="lightbox-nav-btn next" onclick="navigateLightbox(1)">▶</div>
 
@@ -660,7 +661,6 @@
     <script>
         let currentUser = JSON.parse(sessionStorage.getItem('neopolis_user')) || null;
         let isSalesPerson = currentUser && (currentUser.role === 'sales' || currentUser.role === 'admin');
-        
         let ceoMobileNumber = localStorage.getItem('neopolis_ceo_mobile') || "98XXX XXXX";
 
         const HARDCODED_CONFIG = {
@@ -671,7 +671,7 @@
         const savedConfig = JSON.parse(localStorage.getItem('zenarch_masterplan_config')) || HARDCODED_CONFIG;
         let siteOrigin = savedConfig.siteOrigin;
         
-        let heroGroup = null;
+        let heroGroup = null, groundTextGroup = null;
         let loadedModel = null, heroModel = null;
         let heroBaseBoxSize = new THREE.Vector3(1, 1, 1);
         let pinDropperMesh = null;
@@ -684,7 +684,7 @@
         let pendingSavePayload = null;
 
         const MORTGAGE_LANDS = ["3", "6", "12", "65", "66", "67", "80", "81", "104", "105", "113", "114", "115", "117"];
-        const AMENITY_LANDS = ["116", "119"];
+        const AMENITY_LANDS = ["116"]; // Plot 119 un-bound from park trigger
 
         let userAccounts = JSON.parse(localStorage.getItem('neopolis_users')) || {
             "admin": { pass: "admin123", role: "admin" },
@@ -695,12 +695,7 @@
             { id: 1, title: "Park Plan Layout", src: "assets/images/park_plan.jpg" }
         ];
 
-        let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {
-            "1": { dim: "35.0' x 64.5'", area: "251", facing: "North", swapScale: true, status: "AVAILABLE", owner: "Unassigned", reserved_by_id: "" },
-            "2": { dim: "35.0' x 64.5'", area: "252", facing: "North", swapScale: true, status: "AVAILABLE", owner: "Unassigned", reserved_by_id: "" },
-            "4": { dim: "35.0' x 64.3'", area: "250", facing: "North", swapScale: true, status: "AVAILABLE", owner: "Unassigned", reserved_by_id: "" },
-            "89": { dim: "30.0' x 55.0'", area: "183", facing: "East", status: "SOLD", owner: "Rams", reserved_by_id: "sales", purchase_date: "05 Aug 2026" }
-        };
+        let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {};
 
         for (let i = 1; i <= 121; i++) {
             const key = String(i);
@@ -711,58 +706,43 @@
             if (MORTGAGE_LANDS.includes(key)) {
                 plotDatabase[key].status = "HOLD";
                 plotDatabase[key].owner = "Mortgaged to APCRDA";
-            } else if (AMENITY_LANDS.includes(key)) {
+            } else if (AMENITY_LANDS.includes(key) || key === "119") {
                 plotDatabase[key].status = "HOLD";
-                plotDatabase[key].owner = "Amenity / Utility";
+                plotDatabase[key].owner = "Amenity / Utility Space";
             }
 
             if (i >= 1 && i <= 14) {
-                plotDatabase[key].facing = "North";
-                plotDatabase[key].rot = 90;
-                plotDatabase[key].swapScale = true;
+                plotDatabase[key].facing = "North"; plotDatabase[key].rot = 90; plotDatabase[key].swapScale = true;
             } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
-                plotDatabase[key].facing = "West";
-                plotDatabase[key].rot = 180;
+                plotDatabase[key].facing = "West"; plotDatabase[key].rot = 180;
             } else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
-                plotDatabase[key].facing = "East";
-                plotDatabase[key].rot = 180;
+                plotDatabase[key].facing = "East"; plotDatabase[key].rot = 180;
             }
         }
         
         function updateDynamicDate() {
             const options = { day: '2-digit', month: 'short', year: 'numeric' };
-            const today = new Date();
-            const dateStr = today.toLocaleDateString('en-GB', options);
-            document.getElementById('currentDateDisplay').innerText = dateStr;
+            document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('en-GB', options);
         }
-        setInterval(updateDynamicDate, 60000); 
-        updateDynamicDate();
+        setInterval(updateDynamicDate, 60000); updateDynamicDate();
 
         function togglePasswordVisibility(inputId, eyeEl) {
             const input = document.getElementById(inputId);
-            if (input.type === 'password') {
-                input.type = 'text';
-                eyeEl.innerText = '🙈';
-            } else {
-                input.type = 'password';
-                eyeEl.innerText = '👁️';
-            }
+            input.type = input.type === 'password' ? 'text' : 'password';
+            eyeEl.innerText = input.type === 'password' ? '👁️' : '🙈';
         }
 
         function toggleInfoPanelCollapse() {
             const panel = document.getElementById('infoPanel');
-            const btn = document.getElementById('collapseBtn');
-            
             panel.classList.toggle('collapsed');
             panel.classList.toggle('expanded');
-            btn.innerText = panel.classList.contains('collapsed') ? '+' : '−';
+            document.getElementById('collapseBtn').innerText = panel.classList.contains('collapsed') ? '+' : '−';
         }
 
         function toggleRightToolbar() {
             const bar = document.getElementById('rightToolbar');
-            const btn = document.getElementById('rightToolbarToggleBtn');
             bar.classList.toggle('collapsed');
-            btn.innerText = bar.classList.contains('collapsed') ? '+' : '−';
+            document.getElementById('rightToolbarToggleBtn').innerText = bar.classList.contains('collapsed') ? '+' : '−';
         }
 
         async function fetchPlotsFromBackend() {
@@ -774,9 +754,7 @@
                     updatePlotColorsFromDB();
                     if (selectedPlotNum) updatePlotUI(selectedPlotNum);
                 }
-            } catch (err) {
-                console.warn("Operating on local state fallback.");
-            }
+            } catch (err) { console.warn("Local fallback active."); }
         }
 
         const map = new maplibregl.Map({
@@ -784,16 +762,8 @@
             style: {
                 version: 8,
                 sources: {
-                    'esri-satellite': {
-                        type: 'raster',
-                        tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
-                        tileSize: 256, maxzoom: 19
-                    },
-                    'carto-labels': {
-                        type: 'raster',
-                        tiles: ['https://basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}.png'],
-                        tileSize: 256, maxzoom: 19
-                    }
+                    'esri-satellite': { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19 },
+                    'carto-labels': { type: 'raster', tiles: ['https://basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }
                 },
                 layers: [
                     { id: 'background', type: 'background', paint: { 'background-color': '#080a0f' } },
@@ -801,7 +771,7 @@
                     { id: 'carto-hybrid-labels', type: 'raster', source: 'carto-labels', layout: { 'visibility': 'visible' } }
                 ]
             },
-            center: [80.7538896607399, 16.470833069059623], zoom: 18.102824376136326, pitch: 60, bearing: 74.19999999999958, antialias: true
+            center: [80.7538896607399, 16.470833069059623], zoom: 18.102824376136326, pitch: 60, bearing: 74.2, antialias: true
         });
 
         let modelTransform = getTransformMatrix(siteOrigin);
@@ -834,6 +804,9 @@
                 dirLight.position.set(120, 250, 100);
                 this.scene.add(dirLight);
 
+                // Create Canvas-driven 3D Ground Text "NeoPolis Springs" during loading
+                createGroundLoadingText(this.scene);
+
                 heroGroup = new THREE.Group();
                 heroGroup.visible = false;
                 this.scene.add(heroGroup);
@@ -848,7 +821,6 @@
                             child.material = child.material.clone();
                             child.material.side = THREE.DoubleSide;
                             child.updateMatrixWorld(true);
-
                             child.userData.originalMaterial = child.material.clone();
 
                             const plotMatch = child.name.trim().match(/^\d+$/);
@@ -861,6 +833,8 @@
                     });
 
                     this.scene.add(loadedModel);
+                    if (groundTextGroup) groundTextGroup.visible = false; // Hide ground loading text once model renders
+
                     updatePlotColorsFromDB();
                     updateUserRoleUI();
                     fetchPlotsFromBackend();
@@ -918,9 +892,34 @@
 
         map.on('style.load', () => { map.addLayer(customThreeLayer); });
 
+        // 3D Ground Text tracked to terrain while GLB loads
+        function createGroundLoadingText(scene) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = "rgba(13, 18, 28, 0.9)";
+            ctx.fillRect(0, 0, 1024, 256);
+            ctx.strokeStyle = "#d4af37"; ctx.lineWidth = 8;
+            ctx.strokeRect(10, 10, 1004, 236);
+            ctx.font = "Bold 70px Outfit, sans-serif";
+            ctx.fillStyle = "#ffffff"; ctx.textAlign = "center";
+            ctx.fillText("NeoPolis SPRINGS", 512, 120);
+            ctx.font = "Bold 35px Outfit, sans-serif";
+            ctx.fillStyle = "#d4af37";
+            ctx.fillText("LOADING MASTER PLAN...", 512, 180);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const geo = new THREE.PlaneGeometry(80, 20);
+            const mat = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide, transparent: true });
+
+            groundTextGroup = new THREE.Mesh(geo, mat);
+            groundTextGroup.rotation.x = -Math.PI / 2;
+            groundTextGroup.position.set(0, 0.5, 0);
+            scene.add(groundTextGroup);
+        }
+
         function create3DPinDropper() {
             if (!heroModel) return;
-
             const pinShape = new THREE.Shape();
             pinShape.moveTo(0, 0);
             pinShape.bezierCurveTo(-1.2, 1.8, -2.2, 3.2, -2.2, 4.5);
@@ -1006,7 +1005,7 @@
             });
 
             if (closestPlot) {
-                if (closestPlot === "116" || closestPlot === "119") openParkPlanModal();
+                if (closestPlot === "116") openParkPlanModal(); // Plot 119 un-bound from park trigger
                 selectedPlotNum = closestPlot;
                 document.getElementById('searchInput').value = closestPlot;
                 focusSelectedPlot(closestPlot);
@@ -1036,7 +1035,6 @@
                 document.getElementById('heroPlotBadge').style.display = 'none';
 
                 targetMesh.updateMatrixWorld(true);
-                
                 const box = new THREE.Box3().setFromObject(targetMesh);
                 const targetSize = new THREE.Vector3();
                 box.getSize(targetSize);
@@ -1056,12 +1054,9 @@
                         scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
                     }
 
-                    if (dbData.facing === "East") {
-                        scaleX = -scaleX;
-                    }
+                    if (dbData.facing === "East") scaleX = -scaleX;
 
-                    const raisedY = center.y + 2.2;
-                    heroGroup.position.set(center.x, raisedY, center.z);
+                    heroGroup.position.set(center.x, center.y + 2.2, center.z);
                     if (dbData.rot !== undefined) heroGroup.rotation.set(0, THREE.MathUtils.degToRad(dbData.rot), 0);
                     
                     heroGroup.visible = true;
@@ -1100,12 +1095,7 @@
                 currentFocusLngLat = [targetLngLatObj.lng, targetLngLatObj.lat];
 
                 map.flyTo({ 
-                    center: currentFocusLngLat, 
-                    zoom: 20.35, 
-                    pitch: 62, 
-                    bearing: map.getBearing(), 
-                    duration: 1200,
-                    padding: { top: 0, bottom: 0, left: 0, right: 0 } 
+                    center: currentFocusLngLat, zoom: 20.35, pitch: 62, bearing: map.getBearing(), duration: 1200, padding: { top: 0, bottom: 0, left: 0, right: 0 } 
                 });
                 
                 updatePlotUI(query);
@@ -1147,19 +1137,16 @@
             const badgeStatusEl = document.getElementById('badgePlotStatus');
             if (badgeStatusEl) {
                 badgeStatusEl.innerText = plotData.status;
-                let bgColor = '#22c55e';
-                let textColor = '#ffffff';
+                let bgColor = '#22c55e'; let textColor = '#ffffff';
                 if (plotData.status === 'SOLD') { bgColor = '#ff0033'; }
                 else if (plotData.status === 'RESERVED') { bgColor = '#ffea00'; textColor = '#000000'; }
                 else if (plotData.status === 'HOLD') { bgColor = '#0066ff'; }
                 
-                badgeStatusEl.style.backgroundColor = bgColor;
-                badgeStatusEl.style.color = textColor;
+                badgeStatusEl.style.backgroundColor = bgColor; badgeStatusEl.style.color = textColor;
             }
 
             const badge = document.getElementById('plotStatus');
-            badge.innerText = plotData.status;
-            badge.className = `status-badge ${plotData.status.toLowerCase()}`;
+            badge.innerText = plotData.status; badge.className = `status-badge ${plotData.status.toLowerCase()}`;
 
             if (isSalesPerson) {
                 document.getElementById('statusSelect').value = plotData.status;
@@ -1185,7 +1172,7 @@
             const currentPlot = plotDatabase[selectedPlotNum] || {};
 
             if (currentPlot.status === 'RESERVED' && currentPlot.reserved_by_id && currentPlot.reserved_by_id !== currentUser.username && currentUser.role !== 'admin') {
-                alert(`Access Denied: Plot ${selectedPlotNum} is locked by ${currentPlot.reserved_by_id}. Only they or an Admin can modify this.`);
+                alert(`Access Denied: Plot ${selectedPlotNum} is locked by ${currentPlot.reserved_by_id}.`);
                 return;
             }
 
@@ -1210,7 +1197,7 @@
                 document.getElementById('otpModal').style.display = 'flex';
                 setTimeout(() => otpInput.focus(), 50);
             } else {
-                submitFinalOtpSave('');
+                submitFinalOtpSave();
             }
         }
 
@@ -1221,47 +1208,47 @@
         }
 
         async function executeFinalSavePayload(otpCode) {
-    if (!pendingSavePayload) return;
-    const { plotId, newStatus, buyerName, buyerMobile } = pendingSavePayload;
+            if (!pendingSavePayload) return;
+            const { plotId, newStatus, buyerName, buyerMobile } = pendingSavePayload;
 
-    const payload = {
-        plotId: String(plotId),
-        newStatus: newStatus,
-        buyerName: buyerName,
-        buyerMobile: buyerMobile,
-        user: { id: currentUser ? currentUser.username : 'admin', role: currentUser ? currentUser.role : 'admin' },
-        otp: otpCode ? String(otpCode).trim() : ''
-    };
+            const payload = {
+                plotId: String(plotId),
+                newStatus: newStatus,
+                buyerName: buyerName,
+                buyerMobile: buyerMobile,
+                user: { id: currentUser ? currentUser.username : 'admin', role: currentUser ? currentUser.role : 'admin' },
+                otp: otpCode ? String(otpCode).trim() : ''
+            };
 
-    try {
-        const response = await fetch('/api/plots/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+            try {
+                const response = await fetch('/api/plots/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-        const result = await response.json();
+                const result = await response.json();
 
-        if (response.ok && result.success) {
-            if (!plotDatabase[plotId]) plotDatabase[plotId] = {};
-            Object.assign(plotDatabase[plotId], result.updatedPlot);
-            localStorage.setItem('neopolis_plot_db', JSON.stringify(plotDatabase));
+                if (response.ok && result.success) {
+                    if (!plotDatabase[plotId]) plotDatabase[plotId] = {};
+                    Object.assign(plotDatabase[plotId], result.updatedPlot);
+                    localStorage.setItem('neopolis_plot_db', JSON.stringify(plotDatabase));
 
-            updatePlotColorsFromDB();
-            updatePlotUI(plotId);
-            alert(result.message || `Plot ${plotId} updated successfully!`);
-            resetToOverview();
-        } else {
-            const errorMsg = result.message || result.error || "Invalid OTP code or unauthorized request.";
-            alert(`Security Verification Error: ${errorMsg}`);
+                    updatePlotColorsFromDB();
+                    updatePlotUI(plotId);
+                    alert(result.message || `Plot ${plotId} updated successfully!`);
+                    resetToOverview();
+                } else {
+                    const errorMsg = result.message || result.error || "Invalid OTP code or unauthorized request.";
+                    alert(`Security Verification Error: ${errorMsg}`);
+                }
+            } catch (err) {
+                console.error("Save payload error:", err);
+                alert("Server communication error. Check logs.");
+            } finally {
+                pendingSavePayload = null;
+            }
         }
-    } catch (err) {
-        console.error("Save payload error:", err);
-        alert("Server communication error. Please check your connection or server logs.");
-    } finally {
-        pendingSavePayload = null;
-    }
-}
 
         function updatePlotColorsFromDB() {
             const showColors = document.getElementById('availabilityToggle').checked;
@@ -1286,16 +1273,12 @@
                         }
 
                         const mat = new THREE.MeshBasicMaterial({ color: colorHex, side: THREE.DoubleSide });
-                        if (selectedPlotNum && plotNum !== selectedPlotNum) {
-                            mat.color.multiplyScalar(0.5);
-                        }
+                        if (selectedPlotNum && plotNum !== selectedPlotNum) mat.color.multiplyScalar(0.5);
                         mesh.material = mat;
                     } else {
                         if (mesh.userData.originalMaterial) {
                             mesh.material = mesh.userData.originalMaterial.clone();
-                            if (selectedPlotNum && plotNum !== selectedPlotNum) {
-                                mesh.material.color.multiplyScalar(0.5);
-                            }
+                            if (selectedPlotNum && plotNum !== selectedPlotNum) mesh.material.color.multiplyScalar(0.5);
                         }
                     }
                 }
@@ -1304,11 +1287,8 @@
             if (loadedModel) {
                 loadedModel.traverse((child) => {
                     if (child.isMesh && !plotMeshes[child.name.trim()]) {
-                        if (selectedPlotNum) {
-                            child.material = new THREE.MeshBasicMaterial({ color: 0x111C38, side: THREE.DoubleSide });
-                        } else if (child.userData.originalMaterial) {
-                            child.material = child.userData.originalMaterial.clone();
-                        }
+                        if (selectedPlotNum) child.material = new THREE.MeshBasicMaterial({ color: 0x111C38, side: THREE.DoubleSide });
+                        else if (child.userData.originalMaterial) child.material = child.userData.originalMaterial.clone();
                     }
                 });
             }
@@ -1343,10 +1323,8 @@
 
         function performLogout() {
             sessionStorage.removeItem('neopolis_user');
-            currentUser = null;
-            isSalesPerson = false;
-            updateUserRoleUI();
-            toggleAuthDropdown();
+            currentUser = null; isSalesPerson = false;
+            updateUserRoleUI(); toggleAuthDropdown();
             if (selectedPlotNum) updatePlotUI(selectedPlotNum);
         }
 
@@ -1481,11 +1459,7 @@
             map.setPaintProperty('esri-satellite-layer', 'raster-opacity', 1.0);
             
             map.flyTo({ 
-                center: [80.7538896607399, 16.470833069059623], 
-                zoom: 18.102824376136326, 
-                pitch: 60, 
-                bearing: 74.19999999999958, 
-                duration: 1200 
+                center: [80.7538896607399, 16.470833069059623], zoom: 18.102824376136326, pitch: 60, bearing: 74.2, duration: 1200 
             });
         }
 
@@ -1514,7 +1488,6 @@
             if (lineW && lineL) {
                 lineW.setAttribute('x1', screenPoints[0].x); lineW.setAttribute('y1', screenPoints[0].y);
                 lineW.setAttribute('x2', screenPoints[1].x); lineW.setAttribute('y2', screenPoints[1].y);
-
                 lineL.setAttribute('x1', screenPoints[1].x); lineL.setAttribute('y1', screenPoints[1].y);
                 lineL.setAttribute('x2', screenPoints[2].x); lineL.setAttribute('y2', screenPoints[2].y);
             }
@@ -1526,16 +1499,13 @@
             if (labelA && labelB && dimParts.length === 2) {
                 const plotInt = parseInt(selectedPlotNum, 10);
                 if (plotInt >= 1 && plotInt <= 14) {
-                    labelA.innerText = dimParts[0].trim();
-                    labelB.innerText = dimParts[1].trim();
+                    labelA.innerText = dimParts[0].trim(); labelB.innerText = dimParts[1].trim();
                 } else {
-                    labelA.innerText = dimParts[1].trim();
-                    labelB.innerText = dimParts[0].trim();
+                    labelA.innerText = dimParts[1].trim(); labelB.innerText = dimParts[0].trim();
                 }
 
                 labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
                 labelA.style.top = `${(screenPoints[0].y + screenPoints[1].y) / 2 - 10}px`;
-
                 labelB.style.left = `${(screenPoints[1].x + screenPoints[2].x) / 2 + 15}px`;
                 labelB.style.top = `${(screenPoints[1].y + screenPoints[2].y) / 2}px`;
             }
@@ -1550,27 +1520,17 @@
             }
         }
 
-        function openParkPlanModal() {
-            renderGalleryGrid();
-            document.getElementById('parkModal').style.display = 'flex';
-        }
-
-        function closeParkPlanModal() {
-            document.getElementById('parkModal').style.display = 'none';
-        }
+        function openParkPlanModal() { renderGalleryGrid(); document.getElementById('parkModal').style.display = 'flex'; }
+        function closeParkPlanModal() { document.getElementById('parkModal').style.display = 'none'; }
 
         function renderGalleryGrid() {
             const grid = document.getElementById('galleryGrid');
             grid.innerHTML = '';
-
             galleryImages.forEach((img, idx) => {
                 const card = document.createElement('div');
                 card.className = 'gallery-card';
                 card.onclick = function() { openLightboxAtIndex(idx); };
-                card.innerHTML = `
-                    <img src="${img.src}" alt="${img.title}">
-                    <div class="gallery-card-title">${img.title}</div>
-                `;
+                card.innerHTML = `<img src="${img.src}" alt="${img.title}"><div class="gallery-card-title">${img.title}</div>`;
                 grid.appendChild(card);
             });
         }
@@ -1586,37 +1546,23 @@
                 const statusMsg = document.getElementById('uploadStatusMsg');
                 const percentText = document.getElementById('uploadPercentText');
 
-                container.style.display = 'block';
-                statusBox.style.display = 'flex';
-                fill.style.width = '0%';
-                statusMsg.innerText = "Uploading...";
-                percentText.innerText = "0%";
+                container.style.display = 'block'; statusBox.style.display = 'flex'; fill.style.width = '0%';
+                statusMsg.innerText = "Uploading..."; percentText.innerText = "0%";
 
                 let progress = 0;
                 const interval = setInterval(() => {
-                    progress += 10;
-                    fill.style.width = `${progress}%`;
-                    percentText.innerText = `${progress}%`;
+                    progress += 10; fill.style.width = `${progress}%`; percentText.innerText = `${progress}%`;
 
                     if (progress >= 100) {
                         clearInterval(interval);
                         statusMsg.innerText = "Upload Complete!";
-
                         const reader = new FileReader();
                         reader.onload = function(event) {
-                            const newImage = {
-                                id: Date.now(),
-                                title: titleInput,
-                                src: event.target.result
-                            };
-
-                            galleryImages.push(newImage);
+                            galleryImages.push({ id: Date.now(), title: titleInput, src: event.target.result });
                             localStorage.setItem('neopolis_gallery_images', JSON.stringify(galleryImages));
-
                             setTimeout(() => {
                                 document.getElementById('imgTitleInput').value = '';
-                                container.style.display = 'none';
-                                statusBox.style.display = 'none';
+                                container.style.display = 'none'; statusBox.style.display = 'none';
                                 renderGalleryGrid();
                             }, 300);
                         };
@@ -1630,7 +1576,6 @@
             if (galleryImages.length === 0) return;
             currentLightboxIndex = index;
             const img = galleryImages[currentLightboxIndex];
-
             document.getElementById('lightboxImg').src = img.src;
             document.getElementById('lightboxCaption').innerText = img.title;
             document.getElementById('imageLightbox').style.display = 'flex';
@@ -1640,19 +1585,12 @@
             if (galleryImages.length === 0) return;
             currentLightboxIndex = (currentLightboxIndex + direction + galleryImages.length) % galleryImages.length;
             const img = galleryImages[currentLightboxIndex];
-
             document.getElementById('lightboxImg').src = img.src;
             document.getElementById('lightboxCaption').innerText = img.title;
         }
 
-        function closeLightbox(e) {
-            document.getElementById('imageLightbox').style.display = 'none';
-        }
-
-        function closeModal(id) { 
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none'; 
-        }
+        function closeLightbox(e) { document.getElementById('imageLightbox').style.display = 'none'; }
+        function closeModal(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
 
         window.addEventListener('keydown', (e) => {
             const lightbox = document.getElementById('imageLightbox');
@@ -1663,47 +1601,34 @@
             }
         });
 
-        function handleSearch(e) { if (e.key === 'Enter') focusSelectedPlot(); }
-
+        // Draggable Toolbar Logic
         const dragToolbar = document.getElementById('rightToolbar');
         let isDraggingToolbar = false;
         let tStartX, tStartY, tStartTop, tStartLeft;
 
         dragToolbar.addEventListener('pointerdown', function(e) {
             if(e.target.closest('button') && e.target.id !== 'rightToolbarToggleBtn') return;
-
             isDraggingToolbar = true;
-            tStartX = e.clientX;
-            tStartY = e.clientY;
-            
+            tStartX = e.clientX; tStartY = e.clientY;
             const rect = dragToolbar.getBoundingClientRect();
-            tStartTop = rect.top;
-            tStartLeft = rect.left;
-            
+            tStartTop = rect.top; tStartLeft = rect.left;
             dragToolbar.style.transition = 'none'; 
-            
             dragToolbar.style.right = 'auto'; 
             dragToolbar.style.left = tStartLeft + 'px';
             dragToolbar.style.top = tStartTop + 'px';
-            
             dragToolbar.setPointerCapture(e.pointerId);
         });
 
         dragToolbar.addEventListener('pointermove', function(e) {
             if (!isDraggingToolbar) return;
             e.preventDefault(); 
-            
-            const dx = e.clientX - tStartX;
-            const dy = e.clientY - tStartY;
-            
-            dragToolbar.style.left = (tStartLeft + dx) + 'px';
-            dragToolbar.style.top = (tStartTop + dy) + 'px';
+            dragToolbar.style.left = (tStartLeft + (e.clientX - tStartX)) + 'px';
+            dragToolbar.style.top = (tStartTop + (e.clientY - tStartY)) + 'px';
         });
 
         dragToolbar.addEventListener('pointerup', function(e) {
             if (!isDraggingToolbar) return;
             isDraggingToolbar = false;
-            
             dragToolbar.style.transition = 'max-height 0.3s ease, padding 0.3s ease';
             dragToolbar.releasePointerCapture(e.pointerId);
         });

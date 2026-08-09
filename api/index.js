@@ -1,16 +1,14 @@
-// Vercel deployment update - force rebuild
+// Meta WhatsApp & MongoDB Atlas Serverless API Engine
 
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const { MongoClient } = require('mongodb');
-const twilio = require('twilio');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Singleton MongoDB Connection Helper
 let cachedClient = null;
 
 async function getDatabase() {
@@ -27,6 +25,42 @@ async function getDatabase() {
     await client.connect();
     cachedClient = client;
     return client.db('neopolis');
+}
+
+// Meta WhatsApp Cloud API Dispatcher Helper
+async function sendMetaWhatsAppMessage(toPhone, messageBody) {
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+
+    if (!phoneNumberId || !accessToken) {
+        console.warn("WhatsApp API environment variables not set. Skipping WhatsApp message dispatch.");
+        return;
+    }
+
+    // Clean phone number format
+    const cleanPhone = String(toPhone).replace(/[^0-9]/g, '');
+    const recipientPhone = cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`;
+
+    try {
+        const response = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                messaging_product: 'whatsapp',
+                to: recipientPhone,
+                type: 'text',
+                text: { body: messageBody }
+            })
+        });
+
+        const resData = await response.json();
+        console.log("WhatsApp Dispatch Status:", resData);
+    } catch (err) {
+        console.error("Meta WhatsApp Dispatch Error:", err.message);
+    }
 }
 
 // Security Attack Logger
@@ -47,7 +81,7 @@ async function logSecurityAttack(type, req, details = '') {
     }
 }
 
-// Anti-Brute-Force Rate Limiting
+// Rate Limiting
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -59,7 +93,7 @@ const apiLimiter = rateLimit({
 
 app.use('/api/', apiLimiter);
 
-// SQL Injection & Malicious Payload Detector
+// Payload Injection Protection
 app.use(async (req, res, next) => {
     const payload = JSON.stringify(req.body) + JSON.stringify(req.query);
     const suspiciousPatterns = [/select\s+.*\s+from/i, /<script>/i, /union\s+select/i, /drop\s+table/i];
@@ -94,16 +128,15 @@ app.get('/api/plots', async (req, res) => {
     }
 });
 
-// POST: Update Plot & Verify CEO OTP
+// POST: Update Plot & WhatsApp OTP / Customer Dispatch
 app.post('/api/plots/update', async (req, res) => {
     try {
         const { plotId, newStatus, buyerName, buyerMobile, user, otp } = req.body;
-
         const providedOtp = otp ? String(otp).trim() : '';
 
         if (newStatus === 'SOLD' && providedOtp !== '849201') {
             await logSecurityAttack('INVALID_CEO_OTP', req, `Plot: ${plotId}`);
-            return res.status(401).json({ success: false, message: 'Invalid CEO Security OTP Code!' });
+            return res.status(401).json({ success: false, message: 'Invalid CEO Security WhatsApp OTP Code!' });
         }
 
         const db = await getDatabase();
@@ -123,18 +156,10 @@ app.post('/api/plots/update', async (req, res) => {
         const plotsCollection = db.collection('plots');
         await plotsCollection.updateOne({ plotId: String(plotId) }, { $set: updatedData }, { upsert: true });
 
-        // Optional SMS Dispatch
-        if (newStatus === 'SOLD' && buyerMobile && process.env.TWILIO_SID) {
-            try {
-                const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH);
-                await client.messages.create({
-                    body: `Dear ${buyerName}, Booking for Plot No. ${plotId} at NeoPolis Springs is confirmed on ${purchaseDate}. Thank you!`,
-                    from: process.env.TWILIO_PHONE,
-                    to: `+91${buyerMobile}`
-                });
-            } catch (smsErr) {
-                console.warn("SMS Error:", smsErr.message);
-            }
+        // Meta WhatsApp Customer Confirmation Slip Dispatch
+        if (newStatus === 'SOLD' && buyerMobile) {
+            const customerMsg = `*NeoPolis Springs - Booking Confirmation*\n\nDear ${buyerName},\n\nYour booking for *Plot No. ${plotId}* has been successfully confirmed on ${purchaseDate}.\n\n*Plot Summary:*\n- Status: SOLD\n- Buyer Name: ${buyerName}\n- Date: ${purchaseDate}\n\nThank you for choosing NeoPolis Springs!`;
+            await sendMetaWhatsAppMessage(buyerMobile, customerMsg);
         }
 
         res.json({
