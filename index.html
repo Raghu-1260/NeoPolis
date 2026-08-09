@@ -717,20 +717,20 @@
 
         // PDF Dimensions for Plots 15 to 112
         let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {
-            "1": { dim: "34'9\" x 65'3\"", area: "250.87", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "2": { dim: "35'0\" x 65'3\"", area: "252.19", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "3": { dim: "72'3\" x 64'6\"", area: "504.06", facing: "North", rot: 90, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
-            "4": { dim: "35'0\" x 64'4\"", area: "250.00", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "5": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "6": { dim: "74'5\" x 64'2\"", area: "529.82", facing: "North", rot: 90, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
-            "7": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "8": { dim: "35'0\" x 64'5\"", area: "250.80", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "9": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "10": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "11": { dim: "33'0\" x 65'2\"", area: "240.00", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "12": { dim: "74'8\" x 65'4\"", area: "541.41", facing: "North", rot: 90, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
-            "13": { dim: "50'0\" x 64'8\"", area: "358.47", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
-            "14": { dim: "44'3\" x 61'7\"", area: "315.00", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "1": { dim: "34'9\" x 65'3\"", area: "250.87", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "2": { dim: "35'0\" x 65'3\"", area: "252.19", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "3": { dim: "72'3\" x 64'6\"", area: "504.06", facing: "North", rot: 270, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
+            "4": { dim: "35'0\" x 64'4\"", area: "250.00", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "5": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "6": { dim: "74'5\" x 64'2\"", area: "529.82", facing: "North", rot: 270, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
+            "7": { dim: "35'0\" x 64'2\"", area: "250.00", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "8": { dim: "35'0\" x 64'5\"", area: "250.80", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "9": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "10": { dim: "74'5\" x 65'4\"", area: "541.41", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "11": { dim: "33'0\" x 65'2\"", area: "240.00", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "12": { dim: "74'8\" x 65'4\"", area: "541.41", facing: "North", rot: 270, status: "HOLD", owner: "Mortgaged to APCRDA", swapScale: true },
+            "13": { dim: "50'0\" x 64'8\"", area: "358.47", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
+            "14": { dim: "44'3\" x 61'7\"", area: "315.00", facing: "North", rot: 270, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
             "116": { dim: "92'11\" x 49'6\"", area: "511.00", facing: "West", rot: 180, status: "AVAILABLE", owner: "Unassigned" },
             "117": { dim: "95'11\" x 49'6\"", area: "535.89", facing: "East", rot: 0, status: "HOLD", owner: "Mortgaged to APCRDA" },
             "118": { dim: "102'4\" x 58'0\"", area: "648.63", facing: "East", rot: 0, status: "HOLD", owner: "Landowner Share" },
@@ -1211,6 +1211,7 @@
             }
         }
 
+        // Updated Hero Mesh Scaler (Targeted West-Only Scale Flip)
         function focusSelectedPlot(num) {
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
             selectedPlotNum = query;
@@ -1251,11 +1252,11 @@
                         scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
                     }
 
-                    // Flips applied for West and East facings
+                    // Flips isolated to West plots strictly
                     if (dbData.facing === "West") {
                         scaleX = -scaleX; 
                     } else if (dbData.facing === "East") {
-                        scaleX = -scaleX;
+                        scaleX = scaleX;
                     }
 
                     heroGroup.position.set(center.x, center.y + 2.2, center.z);
@@ -1717,8 +1718,8 @@
                     labelA.innerText = dimParts[1].trim(); 
                     labelB.innerText = dimParts[0].trim(); 
                 } else if (plotData.facing === "West" || plotData.facing === "East") {
-                    labelA.innerText = dimParts[0].trim(); // Width along front
-                    labelB.innerText = dimParts[1].trim(); // Depth along side
+                    labelA.innerText = dimParts[0].trim(); 
+                    labelB.innerText = dimParts[1].trim(); 
                 } else {
                     labelA.innerText = dimParts[0].trim();
                     labelB.innerText = dimParts[1].trim();
