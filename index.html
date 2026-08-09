@@ -686,29 +686,44 @@
         let progressCanvas = null, progressTexture = null;
 
         // PARK AMENITIES HOTSPOT DATA (You can edit these coordinates and image paths)
-        const PARK_AMENITIES_DATA = [
-            { 
-                id: "play_area", 
-                title: "Children's Play Area", 
-                coords: [15, 1.5, -12], 
-                img: "assets/images/Logo.png", 
-                desc: "Multi-play station with rubberized safety flooring & swings." 
-            },
-            { 
-                id: "walking_track", 
-                title: "Paved Walking Track", 
-                coords: [15, 1.5, 0], 
-                img: "assets/images/Logo.png", 
-                desc: "Peripheral 800m illuminated jogging and walking track." 
-            },
-            { 
-                id: "gazebo", 
-                title: "Central Gazebo & Seating", 
-                coords: [15, 1.5, 12], 
-                img: "assets/images/Logo.png", 
-                desc: "Shaded seating gazebo surrounded by landscaped flower beds." 
-            }
-        ];
+        // Updated Park Amenities Data mapped visually from North to South (facing Plots 27 down to 15)
+const PARK_AMENITIES_DATA = [
+    { 
+        id: "cricket_pitch", 
+        title: "Cricket Pitch & Ground", 
+        coords: [28, 1.5, -35], // Aligned next to Plot 27
+        img: "assets/images/Logo.png", 
+        desc: "Net cricket pitch with green lawn area." 
+    },
+    { 
+        id: "badminton_court", 
+        title: "Badminton / Pickleball Courts", 
+        coords: [28, 1.5, -22], // Aligned next to Plot 25/26
+        img: "assets/images/Logo.png", 
+        desc: "Outdoor dual sports courts with night lighting." 
+    },
+    { 
+        id: "amphitheater", 
+        title: "Circular Open Amphitheater", 
+        coords: [28, 1.5, -10], // Aligned next to Plot 23/24
+        img: "assets/images/Logo.png", 
+        desc: "Tiered seating outdoor amphitheater for community gatherings." 
+    },
+    { 
+        id: "children_play", 
+        title: "Children's Play Area & Swings", 
+        coords: [28, 1.5, 8], // Aligned next to Plot 18/19
+        img: "assets/images/Logo.png", 
+        desc: "Multi-play slides, swings, and rubberized safety play park." 
+    },
+    { 
+        id: "gazebo_fountain", 
+        title: "Pergola Gazebo & Water Fountain", 
+        coords: [28, 1.5, 28], // Aligned next to Plot 15/16
+        img: "assets/images/Logo.png", 
+        desc: "Shaded wooden pergola gazebo accompanied by a circular water fountain plaza." 
+    }
+];
 
         let parkPinsGroup = new THREE.Group();
 
