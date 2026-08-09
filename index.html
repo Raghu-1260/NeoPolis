@@ -1254,9 +1254,9 @@
 
                     // STRICT WEST-ONLY SCALING (East & North Plots left untouched)
                     if (dbData.facing === "West") {
-                        scaleX = -scaleX; 
+                        scaleY = -scaleY; 
                     } else if (dbData.facing === "East") {
-                        scaleX = scaleX; // No flip or extra scale applied to East plots
+                        scaleX = -scaleX; // No flip or extra scale applied to East plots
                     }
 
                     heroGroup.position.set(center.x, center.y + 2.2, center.z);
