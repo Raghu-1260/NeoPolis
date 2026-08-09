@@ -99,7 +99,7 @@
             width: 100%; height: auto; max-height: 40px; object-fit: contain; margin-bottom: 8px; display: block;
         }
 
-        /* Dynamic Collapsible Info Panel with Mouse Scroll Enabled */
+        /* Dynamic Collapsible Info Panel */
         .info-panel {
             position: absolute; top: 70px; left: 15px; width: 320px;
             border-radius: 20px; padding: 18px; z-index: 10;
@@ -194,15 +194,14 @@
             padding: 8px 16px; border-radius: 30px; font-size: 0.78rem; font-weight: 700; color: #fff;
         }
 
-        /* Dynamic Collapsible Right Toolbar - Draggable */
+        /* Toolbar */
         .right-toolbar {
             position: absolute; top: 110px; right: 15px; z-index: 10;
             display: flex; flex-direction: column; gap: 12px;
             padding: 12px 8px; border-radius: 16px;
             transition: max-height 0.3s ease, padding 0.3s ease;
             overflow: hidden; max-height: 350px;
-            cursor: grab;
-            touch-action: none;
+            cursor: grab; touch-action: none;
         }
         .right-toolbar:active { cursor: grabbing; }
         .right-toolbar.collapsed { max-height: 42px; padding: 6px; }
@@ -256,7 +255,7 @@
             transition: opacity 0.2s ease; text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
-        /* PARK & GALLERY MODAL STYLING */
+        /* Modal Gallery */
         .park-modal {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.85); z-index: 1000; display: none;
@@ -284,7 +283,6 @@
         .gallery-card img { width: 100%; height: 160px; object-fit: cover; }
         .gallery-card-title { padding: 8px 12px; font-size: 0.8rem; font-weight: 700; color: #d4af37; text-align: center; }
 
-        /* UPLOAD & PROGRESS BAR STYLING */
         .upload-section {
             display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.05);
             padding: 12px 14px; border-radius: 12px; border: 1px dashed rgba(212, 175, 55, 0.4);
@@ -303,7 +301,6 @@
             font-size: 0.72rem; font-weight: 700; color: #22c55e; display: flex; justify-content: space-between;
         }
 
-        /* LIGHTBOX OVERLAY */
         .image-lightbox {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.92); z-index: 1050; display: none;
@@ -337,7 +334,6 @@
         .lightbox-nav-btn.prev { left: -65px; }
         .lightbox-nav-btn.next { right: -65px; }
 
-        /* CEO OTP MODAL STYLING */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000;
             display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px);
@@ -355,13 +351,8 @@
         @media (max-width: 768px) {
             .widget-pill { display: none; }
             .info-panel {
-                top: auto !important; 
-                bottom: 0 !important; 
-                left: 0 !important; 
-                right: 0 !important; 
-                width: 100vw !important;
-                max-height: 50vh !important;
-                border-radius: 20px 20px 0 0 !important;
+                top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100vw !important;
+                max-height: 50vh !important; border-radius: 20px 20px 0 0 !important;
                 transform: translateY(calc(100% - 65px));
                 transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
             }
@@ -394,7 +385,6 @@
 
     <div id="plotOverlayContainer"></div>
 
-    <!-- Dynamic Hero Badge -->
     <div id="heroPlotBadge">
         <div class="badge-title" id="badgePlotTitle">Plot 1</div>
         <div class="badge-sub" id="badgePlotArea">251 Sq.Yds</div>
@@ -402,7 +392,6 @@
         <div class="badge-owner" id="badgePlotOwner">Owner: Unassigned</div>
     </div>
 
-    <!-- Header Bar -->
     <div class="header-bar">
         <div class="left-branding glass-card">
             <img src="assets/images/Logo.png" alt="Avenue Logo" class="avenue-logo">
@@ -415,7 +404,6 @@
             <div class="widget-item">📅 <strong id="currentDateDisplay">Loading...</strong></div>
         </div>
 
-        <!-- Top Right Auth Dropdown Widget -->
         <div class="auth-container">
             <button class="auth-btn" onclick="toggleAuthDropdown()">
                 👤 <span id="authBtnText">LOGIN</span>
@@ -495,7 +483,6 @@
         </div>
     </div>
 
-    <!-- Dynamic Collapsible Info Panel with Mouse Scroll -->
     <div class="info-panel glass-card" id="infoPanel">
         <div class="info-panel-header" onclick="toggleInfoPanelCollapse()">
             <div class="panel-label">SEARCH PLOT</div>
@@ -565,7 +552,6 @@
 
     <div class="phone-pill glass-card">📞 +91 9505 894 894</div>
 
-    <!-- Draggable Toolbar -->
     <div class="right-toolbar glass-card" id="rightToolbar">
         <button class="right-toolbar-toggle" onclick="toggleRightToolbar()" id="rightToolbarToggleBtn">−</button>
         <button class="tool-icon-btn active" onclick="focusSelectedPlot()">
@@ -590,7 +576,6 @@
         </button>
     </div>
 
-    <!-- LEGEND BAR -->
     <div class="legend-bar glass-card">
         <div class="legend-item" onclick="filterLegendStatus('AVAILABLE')"><div class="dot available"></div> AVAILABLE</div>
         <div class="legend-item" onclick="filterLegendStatus('RESERVED')"><div class="dot reserved"></div> RESERVED</div>
@@ -598,7 +583,6 @@
         <div class="legend-item" onclick="filterLegendStatus('SOLD')"><div class="dot sold"></div> SOLD</div>
     </div>
 
-    <!-- CEO WhatsApp OTP MODAL -->
     <div id="otpModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-header">CEO Authorization Required</div>
@@ -617,7 +601,6 @@
         </div>
     </div>
 
-    <!-- PARK & GALLERY MODAL -->
     <div class="park-modal" id="parkModal">
         <div class="park-modal-content">
             <div class="park-modal-header">
@@ -645,7 +628,6 @@
         </div>
     </div>
 
-    <!-- LIGHTBOX OVERLAY -->
     <div class="image-lightbox" id="imageLightbox" onclick="closeLightbox(event)">
         <div class="lightbox-container" onclick="event.stopPropagation()">
             <button class="lightbox-close" onclick="closeLightbox(event)">✖</button>
@@ -703,41 +685,37 @@
         };
 
         // -------------------------------------------------------------
-// GALLERY CONFIGURATION (Local Directory: assets/images/gallery/)
-// -------------------------------------------------------------
+        // GALLERY CONFIGURATION (Local Directory: assets/images/gallery/)
+        // -------------------------------------------------------------
+        let defaultGallery = [];
+        let galleryImages = JSON.parse(localStorage.getItem('neopolis_gallery_images')) || defaultGallery;
 
-// Default gallery initialized completely empty (all stock shots and Avenue logo fallbacks removed)
-let defaultGallery = [];
+        function renderGalleryGrid() {
+            const grid = document.getElementById('galleryGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
 
-// Load uploaded images from LocalStorage or default to empty array
-let galleryImages = JSON.parse(localStorage.getItem('neopolis_gallery_images')) || defaultGallery;
+            if (galleryImages.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #a0aec0; padding: 40px 10px; font-size: 0.85rem;">
+                    No images in gallery yet. Click <strong>"➕ ADD IMAGE"</strong> above to upload site photos.
+                </div>`;
+                return;
+            }
 
-// Render Gallery Grid
-function renderGalleryGrid() {
-    const grid = document.getElementById('galleryGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
+            galleryImages.forEach((img, idx) => {
+                const card = document.createElement('div');
+                card.className = 'gallery-card';
+                card.onclick = function() { openLightboxAtIndex(idx); };
 
-    if (galleryImages.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: #a0aec0; padding: 40px 10px; font-size: 0.85rem;">
-            No images in gallery yet. Click <strong>"➕ ADD IMAGE"</strong> above to upload site photos.
-        </div>`;
-        return;
-    }
+                card.innerHTML = `
+                    <img src="${img.src}" alt="${img.title}">
+                    <div class="gallery-card-title">${img.title}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
 
-    galleryImages.forEach((img, idx) => {
-        const card = document.createElement('div');
-        card.className = 'gallery-card';
-        card.onclick = function() { openLightboxAtIndex(idx); };
-
-        card.innerHTML = `
-            <img src="${img.src}" alt="${img.title}">
-            <div class="gallery-card-title">${img.title}</div>
-        `;
-        grid.appendChild(card);
-    });
-}
-        // PDF Dimensions for Plots 15 to 112: 33'0" short side x 52'6" long side
+        // PDF Dimensions for Plots 15 to 112
         let plotDatabase = JSON.parse(localStorage.getItem('neopolis_plot_db')) || {
             "1": { dim: "34'9\" x 65'3\"", area: "250.87", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
             "2": { dim: "35'0\" x 65'3\"", area: "252.19", facing: "North", rot: 90, status: "AVAILABLE", owner: "Unassigned", swapScale: true },
@@ -761,29 +739,37 @@ function renderGalleryGrid() {
             "121": { dim: "112'2\" x 57'1\"", area: "701.11", facing: "East", rot: 0, status: "HOLD", owner: "Landowner Share" }
         };
 
-        // Database Loop assigning Rotation and Directional Parameters
-for (let i = 1; i <= 121; i++) {
-    const key = String(i);
+        for (let i = 1; i <= 121; i++) {
+            const key = String(i);
+            if (!plotDatabase[key]) {
+                let width = "33'0\"";
+                let length = "52'6\"";
+                let area = "192.51";
 
-    // 1. North Row Plots (1-14): Face North, Rotated 90°, Swapped Dimensions
-    if (i >= 1 && i <= 14) {
-        plotDatabase[key].facing = "North";
-        plotDatabase[key].rot = -90;
-        plotDatabase[key].swapScale = true;
-    } 
-    // 2. West Columns (Plots 15-27, 41-53, 67-79, 93-105, 116-121): Face West, Rotated 180°
-    else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
-        plotDatabase[key].facing = "West";
-        plotDatabase[key].rot = 0;
-        plotDatabase[key].swapScale = false;
-    } 
-    // 3. East Columns (Plots 28-40, 54-66, 80-92, 106-115): Face East, Rotated 0°
-    else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
-        plotDatabase[key].facing = "East";
-        plotDatabase[key].rot = 0;
-        plotDatabase[key].swapScale = false;
-    }
-}
+                if (["15", "40", "41", "66", "67", "92", "93", "105"].includes(key)) {
+                    width = "36'0\"";
+                    area = "210.24";
+                }
+
+                plotDatabase[key] = { dim: `${width} x ${length}`, area: area, status: "AVAILABLE", owner: "Unassigned" };
+            }
+
+            if (i >= 1 && i <= 14) {
+                plotDatabase[key].facing = "North"; plotDatabase[key].rot = 90; plotDatabase[key].swapScale = true;
+            } else if ((i >= 15 && i <= 27) || (i >= 41 && i <= 53) || (i >= 67 && i <= 79) || (i >= 93 && i <= 105) || (i >= 116 && i <= 121)) {
+                plotDatabase[key].facing = "West"; plotDatabase[key].rot = 180; plotDatabase[key].swapScale = false;
+            } else if ((i >= 28 && i <= 40) || (i >= 54 && i <= 66) || (i >= 80 && i <= 92) || (i >= 106 && i <= 115)) {
+                plotDatabase[key].facing = "East"; plotDatabase[key].rot = 0; plotDatabase[key].swapScale = false;
+            }
+
+            if (MORTGAGE_LANDS.includes(key)) {
+                plotDatabase[key].status = "HOLD";
+                plotDatabase[key].owner = "Mortgaged to APCRDA";
+            } else if (key === "119") {
+                plotDatabase[key].status = "HOLD";
+                plotDatabase[key].owner = "Amenity / Utility Space";
+            }
+        }
         
         function updateDynamicDate() {
             const options = { day: '2-digit', month: 'short', year: 'numeric' };
@@ -1225,7 +1211,6 @@ for (let i = 1; i <= 121; i++) {
             }
         }
 
-        // Updated Hero Mesh Scaler (East Flips Short Side, West Flips Long Depth Side)
         function focusSelectedPlot(num) {
             const query = num || document.getElementById('searchInput').value.trim().replace(/[^0-9]/g, '') || "1";
             selectedPlotNum = query;
@@ -1255,62 +1240,52 @@ for (let i = 1; i <= 121; i++) {
 
                 const dbData = plotDatabase[query] || { area: "192.51", dim: "33.0' x 52.5'", facing: "West", status: "AVAILABLE", owner: "Unassigned" };
 
-                // HERO PLOT SCALE & ROTATION ENGINE
-if (heroGroup) {
-    let scaleX, scaleZ;
+                if (heroGroup) {
+                    let scaleX, scaleZ;
 
-    if (dbData.swapScale) {
-        scaleX = targetSize.z / Math.max(heroBaseBoxSize.x, 0.001);
-        scaleZ = targetSize.x / Math.max(heroBaseBoxSize.z, 0.001);
-    } else {
-        scaleX = targetSize.x / Math.max(heroBaseBoxSize.x, 0.001);
-        scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
-    }
+                    if (dbData.swapScale) {
+                        scaleX = targetSize.z / Math.max(heroBaseBoxSize.x, 0.001);
+                        scaleZ = targetSize.x / Math.max(heroBaseBoxSize.z, 0.001);
+                    } else {
+                        scaleX = targetSize.x / Math.max(heroBaseBoxSize.x, 0.001);
+                        scaleZ = targetSize.z / Math.max(heroBaseBoxSize.z, 0.001);
+                    }
 
-    // -------------------------------------------------------------
-    // ADD / MODIFY THIS BLOCK FOR WEST-FACING PLOTS ONLY
-    // -------------------------------------------------------------
-    if (dbData.facing === "West") {
-        // Option 1: Flip axis direction (standard directional alignment)
-        scaleZ = -scaleZ; 
+                    // Flips applied for West and East facings
+                    if (dbData.facing === "West") {
+                        scaleX = -scaleX; 
+                    } else if (dbData.facing === "East") {
+                        scaleX = -scaleX;
+                    }
 
-        // Option 2: Apply a custom dimension multiplier (e.g., scale length by 1.1x)
-        // scaleZ = -scaleZ * 1.1; 
-        // scaleX = scaleX * 1.05;
-    } else if (dbData.facing === "East") {
-        scaleX = -scaleX;
-    }
-    // -------------------------------------------------------------
+                    heroGroup.position.set(center.x, center.y + 2.2, center.z);
+                    if (dbData.rot !== undefined) {
+                        heroGroup.rotation.set(0, THREE.MathUtils.degToRad(dbData.rot), 0);
+                    }
 
-    heroGroup.position.set(center.x, center.y + 2.2, center.z);
-    if (dbData.rot !== undefined) {
-        heroGroup.rotation.set(0, THREE.MathUtils.degToRad(dbData.rot), 0);
-    }
+                    heroGroup.visible = true;
 
-    heroGroup.visible = true;
+                    if (pinDropperMesh) {
+                        pinDropperMesh.scale.set(0.45 / Math.abs(scaleX), 0.45, 0.45 / Math.abs(scaleZ));
+                    }
 
-    if (pinDropperMesh) {
-        pinDropperMesh.scale.set(0.45 / Math.abs(scaleX), 0.45, 0.45 / Math.abs(scaleZ));
-    }
+                    heroGroup.scale.set(0, 0, 0);
 
-    heroGroup.scale.set(0, 0, 0);
-
-    // Apply the updated scale factors to GSAP
-    gsap.to(heroGroup.scale, { 
-        x: scaleX, 
-        y: 1.0, 
-        z: scaleZ, 
-        duration: 0.5, 
-        ease: "back.out(1.4)",
-        onComplete: function() {
-            allowDimensionDraw = true;
-            document.getElementById('dimensionSvg').style.display = 'block';
-            document.getElementById('dimSideA').style.display = 'block';
-            document.getElementById('dimSideB').style.display = 'block';
-            document.getElementById('heroPlotBadge').style.display = 'block';
-        }
-    });
-}
+                    gsap.to(heroGroup.scale, { 
+                        x: scaleX, 
+                        y: 1.0, 
+                        z: scaleZ, 
+                        duration: 0.5, 
+                        ease: "back.out(1.4)",
+                        onComplete: function() {
+                            allowDimensionDraw = true;
+                            document.getElementById('dimensionSvg').style.display = 'block';
+                            document.getElementById('dimSideA').style.display = 'block';
+                            document.getElementById('dimSideB').style.display = 'block';
+                            document.getElementById('heroPlotBadge').style.display = 'block';
+                        }
+                    });
+                }
 
                 updatePlotColorsFromDB();
                 map.setPaintProperty('esri-satellite-layer', 'raster-opacity', 0.25);
@@ -1741,9 +1716,12 @@ if (heroGroup) {
                 if (plotInt >= 1 && plotInt <= 14) {
                     labelA.innerText = dimParts[1].trim(); 
                     labelB.innerText = dimParts[0].trim(); 
+                } else if (plotData.facing === "West" || plotData.facing === "East") {
+                    labelA.innerText = dimParts[0].trim(); // Width along front
+                    labelB.innerText = dimParts[1].trim(); // Depth along side
                 } else {
-                    labelA.innerText = dimParts[0].trim(); // Short Side Width (33.0' / 36.0')
-                    labelB.innerText = dimParts[1].trim(); // Long Side Depth (52.5')
+                    labelA.innerText = dimParts[0].trim();
+                    labelB.innerText = dimParts[1].trim();
                 }
 
                 labelA.style.left = `${(screenPoints[0].x + screenPoints[1].x) / 2}px`;
@@ -1764,24 +1742,6 @@ if (heroGroup) {
 
         function openParkPlanModal() { renderGalleryGrid(); document.getElementById('parkModal').style.display = 'flex'; }
         function closeParkPlanModal() { document.getElementById('parkModal').style.display = 'none'; }
-
-        function renderGalleryGrid() {
-            const grid = document.getElementById('galleryGrid');
-            if (!grid) return;
-            grid.innerHTML = '';
-
-            galleryImages.forEach((img, idx) => {
-                const card = document.createElement('div');
-                card.className = 'gallery-card';
-                card.onclick = function() { openLightboxAtIndex(idx); };
-
-                card.innerHTML = `
-                    <img src="${img.src}" alt="${img.title}" onerror="this.onerror=null; this.src='assets/images/ZenArch_Logo.png';">
-                    <div class="gallery-card-title">${img.title}</div>
-                `;
-                grid.appendChild(card);
-            });
-        }
 
         function handleImageUpload(e) {
             const file = e.target.files[0];
